@@ -14,11 +14,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("Este correo ya está registrado")
         return value
-
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password']
-        )
-        return user
+def create(self, validated_data):
+    user = User.objects.create_user(
+        username=validated_data['username'],
+        email=validated_data['email'],
+        password=validated_data['password'],
+        is_active=False
+    )
+    return user
