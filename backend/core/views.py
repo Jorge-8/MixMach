@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth import get_user_model
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer
 from .utils import token_generator
 
@@ -58,3 +58,35 @@ class VerifyEmailView(APIView):
             return Response({"message": "Cuenta verificada correctamente"})
 
         return Response({"error": "Token inválido"}, status=400)
+    
+class LoginView(APIView):
+
+    def post(self, request):
+
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = authenticate(
+            username=username,
+            password=password
+        )
+
+        if user is None:
+            return Response(
+                {"error": "Credenciales incorrectas"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if not user.is_active:
+            return Response(
+                {"error": "Cuenta no verificada"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "message": "Login exitoso",
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        })
