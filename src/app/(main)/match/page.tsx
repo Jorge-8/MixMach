@@ -78,7 +78,7 @@ export default function MatchPage() {
             <span className="text-5xl bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
               <i className="bi bi-bug"></i>
             </span>
-            <h2 className="text-xl font-bold text-[#2C1810] dark:text-[#FFF8F0] bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold text-[#2C1810] bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
               Sin resultados
             </h2>
             <p className="text-sm text-[#9B7A6A] dark:text-[#a89088]">

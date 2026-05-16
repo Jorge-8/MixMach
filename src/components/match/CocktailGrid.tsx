@@ -275,7 +275,7 @@ export default function CocktailGrid({ selectedIngredients }: Props) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
         <span className="text-6xl">🍹</span>
-        <h1 className="text-2xl font-bold text-[#2C1810] dark:text-[#FFF8F0] bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold text-[#2C1810] bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
           ¿Qué tienes hoy?
         </h1>
         <p className="text-sm text-[#9B7A6A] dark:text-[#a89088]">
@@ -292,7 +292,7 @@ export default function CocktailGrid({ selectedIngredients }: Props) {
         <span className="text-5xl bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
           <i className="bi bi-bug"></i>
         </span>
-        <h2 className="text-xl font-bold text-[#2C1810] dark:text-[#FFF8F0] bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
+        <h2 className="text-xl font-bold text-[#2C1810] bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
           Sin resultados
         </h2>
         <p className="text-sm text-[#9B7A6A] dark:text-[#a89088]">

@@ -18,7 +18,7 @@ export default function MyRecipeCard({ recipe, onClick, onDelete }: Props) {
   return (
     <div
       onClick={onClick}
-      className="bg-white dark:bg-[#1a1a2e] border border-[#EDD9C8] dark:border-[#3a3a5c] rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative"
+      className="bg-white  dark:bg-[#1a1a2e] border border-[#EDD9C8] dark:border-[#3a3a5c] rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative"
     >
       {/* Imagen */}
       <div className="relative h-44 bg-[#FFF3EA] dark:bg-[#0f0f23] overflow-hidden">
@@ -40,10 +40,10 @@ export default function MyRecipeCard({ recipe, onClick, onDelete }: Props) {
 
         {/* Badge dificultad */}
         {/* TODO BACKEND: difficulty viene del back */}
-        <div className="absolute top-3 left-3 bg-white/85 dark:bg-black/60 backdrop-blur-sm text-[#2C1810] dark:text-white text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
+        {/* <div className="absolute top-3 left-3 bg-white/85 dark:bg-black/60 backdrop-blur-sm text-[#2C1810] dark:text-white text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
           <i className="bi bi-star text-[9px]">{""}</i>
           <span>{recipe.difficulty}</span>
-        </div>
+        </div> */}
 
         {/* Badge "Mi receta" */}
         <div className="absolute bottom-3 left-3 bg-gradient-to-r from-[#FF6B6B] to-[#4ECDC4] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
@@ -62,7 +62,7 @@ export default function MyRecipeCard({ recipe, onClick, onDelete }: Props) {
         {/* Meta: dificultad + tipo + ingredientes */}
         <div className="flex items-center gap-3 flex-wrap mb-3">
           <span
-            className={`text-xs font-medium ${difficultyColor(recipe.difficulty)}`}
+            className={`text-xs bi bi-star font-medium flex items-center gap-1 ${difficultyColor(recipe.difficulty)}`}
           >
             {recipe.difficulty}
           </span>

@@ -58,10 +58,13 @@ export default function CocktailCard({
         )}
 
         {/* Badge dificultad — TODO BACKEND: viene del back */}
-        <div className="absolute top-3 left-3 bg-white/80 dark:bg-black/50 backdrop-blur-sm text-[#2C1810] dark:text-white text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
-          <i className="bi bi-star text-[9px]">{""}</i>
-          <span>{cocktail.difficulty}</span>
-        </div>
+        {/* Badge dificultad — solo inicio */}
+        {mode === "ingredients" && (
+          <div className="absolute top-3 left-3 bg-white/80 dark:bg-black/50 backdrop-blur-sm text-[#2C1810] dark:text-white text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
+            <i className="bi bi-star text-[9px]">{""}</i>
+            <span>{cocktail.difficulty}</span>
+          </div>
+        )}
 
         {/* Badge derecho — cambia según mode */}
         {mode === "ingredients" && match && (
@@ -70,13 +73,6 @@ export default function CocktailCard({
             className={`absolute top-3 right-3 text-xs font-bold px-2.5 py-1 rounded-full ${badgeColor(match.pct)}`}
           >
             {match.pct}%
-          </div>
-        )}
-        {mode === "browse" && (
-          // MANTENER: num ingredientes viene del back
-          <div className="absolute top-3 right-3 bg-white/80 dark:bg-black/50 backdrop-blur-sm text-[#2C1810] dark:text-white text-[10px] font-medium px-2 py-1 rounded-full flex items-center gap-1">
-            <i className="bi bi-list-ul text-[10px]">{""}</i>
-            <span>{cocktail.ingredients.length} ing.</span>
           </div>
         )}
       </div>
@@ -119,7 +115,7 @@ export default function CocktailCard({
           // TODO BACKEND: dificultad, isAlcoholic, num ingredientes vienen del back
           <div className="flex items-center gap-3 flex-wrap">
             <span
-              className={`text-xs font-medium flex items-center gap-1 ${difficultyColor(cocktail.difficulty)}`}
+              className={`text-xs bi bi-star font-medium flex items-center gap-1 ${difficultyColor(cocktail.difficulty)}`}
             >
               {cocktail.difficulty}
             </span>

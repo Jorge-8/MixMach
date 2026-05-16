@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
+// CAMBIO: se eliminó useState (ya no maneja favorito localmente)
+// Se agregó useFavorites del context global
 import { ICocktail } from "@/types/ICocktail";
 import { ingredientMatches } from "@/utils/normalize";
+import { useFavorites } from "@/context/FavoritesContext";
 
 interface Props {
   cocktail: ICocktail;
@@ -37,21 +39,19 @@ export default function CocktailModal({
   onClose,
 }: Props) {
   // ─────────────────────────────────────────────────────────────
-  // TODO BACKEND: isFavorite vendrá del estado del usuario.
-  // toggleFavorite llamará a favoriteService.ts
+  // CAMBIO: isFavorite ahora viene del context global (FavoritesContext)
+  // en lugar de useState local. Esto permite que la página de favoritos
+  // se actualice en tiempo real al presionar el corazón aquí.
+  //
+  // TODO BACKEND: cuando se conecte, FavoritesContext llamará automáticamente
+  // a POST /api/favorites/ o DELETE /api/favorites/{id}/
+  // No hay que cambiar nada en este componente al conectar el back.
   // ─────────────────────────────────────────────────────────────
-  const [isFavorite, setIsFavorite] = useState(cocktail.isFavorite ?? false);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const fav = isFavorite(cocktail.id);
 
   // MANTENER: nota de cierre fija para esta receta
   const closingNote = CLOSING_NOTES[cocktail.id % CLOSING_NOTES.length];
-
-  function toggleFavorite() {
-    // BORRAR cuando se conecte al back
-    setIsFavorite((prev) => !prev);
-    // DESCOMENTAR cuando se conecte al back:
-    // if (isFavorite) { await favoriteService.remove(cocktail.id); }
-    // else            { await favoriteService.add(cocktail.id); }
-  }
 
   return (
     <div
@@ -73,7 +73,10 @@ export default function CocktailModal({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-6xl">
-              🍹
+              <i className="bi bi-cup-straw text-4xl text-[#EDD9C8] dark:text-[#3a3a5c]">
+                {""}
+              </i>
+              <p className="text-xs text-[#9B7A6A]">Sin imagen</p>
             </div>
           )}
 
@@ -88,22 +91,18 @@ export default function CocktailModal({
             <i className="bi bi-x-lg text-sm font-bold">{""}</i>
           </button>
 
-          {/* Favorito — TODO BACKEND: conectar con favoriteService */}
+          {/* Favorito — CAMBIO: usa context global en lugar de estado local */}
           <button
-            onClick={toggleFavorite}
+            onClick={() => toggleFavorite(cocktail.id)}
             className={`absolute top-4 right-4 w-9 h-9 backdrop-blur-md border rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-150 cursor-pointer
               ${
-                isFavorite
+                fav
                   ? "bg-[#FF6B6B] border-[#FF6B6B] text-white"
                   : "bg-black/60 border-white/30 text-white hover:bg-[#FF6B6B]/80 hover:border-[#FF6B6B]"
               }`}
-            aria-label={
-              isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"
-            }
+            aria-label={fav ? "Quitar de favoritos" : "Agregar a favoritos"}
           >
-            <i
-              className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-sm`}
-            >
+            <i className={`bi ${fav ? "bi-heart-fill" : "bi-heart"} text-sm`}>
               {""}
             </i>
           </button>
@@ -180,7 +179,7 @@ export default function CocktailModal({
               <div className="flex flex-col gap-2">
                 {cocktail.ingredients.map((ing, i) => {
                   // MANTENER: lógica de palomita cambia según mode
-                  // "browse"      → siempre palomita (el usuario ve la receta completa)
+                  // "browse"      → siempre palomita
                   // "ingredients" → palomita si el usuario tiene el ingrediente
                   // TODO BACKEND: en modo ingredients, hasIt vendrá del back
                   const hasIt =
