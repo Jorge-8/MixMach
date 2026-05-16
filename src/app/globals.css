@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@variant dark (&:where(.dark, .dark *));  /* ← agrega esta línea */
+@variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #FFF8F0;
@@ -27,4 +27,25 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* ── Scrollbar personalizado ── */
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #EDD9C8;
+  border-radius: 999px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #4ECDC4;
+}
+.dark .custom-scroll::-webkit-scrollbar-thumb {
+  background: #3a3a5c;
+}
+.dark .custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #4ECDC4;
 }
