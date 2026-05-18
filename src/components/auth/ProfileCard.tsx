@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ICocktail } from "@/types/ICocktail";
 import { IMyRecipe, IMyRecipeForm } from "@/types/IMyRecipe";
@@ -28,32 +28,13 @@ const MOCK_USER = {
 // TODO BACKEND: eliminar MOCK_HISTORY_DATA cuando se conecte al back
 // Reemplazar con: const { history, clearHistory } = useSearchHistory()
 // Endpoint: GET /api/search-history/ y DELETE /api/search-history/
+// Las fechas vienen como ISO string del back y se convierten a Date en el hook
 // ─────────────────────────────────────────────────────────────
 const MOCK_HISTORY_DATA = [
-  {
-    id: 1,
-    query: "Mojito",
-    type: "ingrediente",
-    date: new Date(Date.now() - 1 * 86400000),
-  },
-  {
-    id: 2,
-    query: "Margarita",
-    type: "bebida",
-    date: new Date(Date.now() - 2 * 86400000),
-  },
-  {
-    id: 3,
-    query: "Piña Colada",
-    type: "bebida",
-    date: new Date(Date.now() - 3 * 86400000),
-  },
-  {
-    id: 4,
-    query: "Ron + Limón",
-    type: "ingrediente",
-    date: new Date(Date.now() - 5 * 86400000),
-  },
+  { id: 1, query: "Mojito", type: "ingrediente", daysAgo: 1 },
+  { id: 2, query: "Margarita", type: "bebida", daysAgo: 2 },
+  { id: 3, query: "Piña Colada", type: "bebida", daysAgo: 3 },
+  { id: 4, query: "Ron + Limón", type: "ingrediente", daysAgo: 5 },
 ];
 
 function difficultyColor(d: string) {
@@ -69,13 +50,13 @@ function getInitials(fullName: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-// MANTENER: funciones de formato y color — 100% frontend
-function formatDate(date: Date) {
-  const diff = Math.floor((Date.now() - date.getTime()) / 86400000);
-  if (diff === 0) return "Hoy";
-  if (diff === 1) return "Ayer";
-  if (diff < 7) return `Hace ${diff} días`;
-  return date.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+// MANTENER: formatDate — solo se llama en cliente (dentro de mounted check)
+function formatDate(daysAgo: number): string {
+  if (daysAgo === 0) return "Hoy";
+  if (daysAgo === 1) return "Ayer";
+  if (daysAgo < 7) return `Hace ${daysAgo} días`;
+  const d = new Date(Date.now() - daysAgo * 86400000);
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
 }
 
 function historyStyle(type: string) {
@@ -207,6 +188,13 @@ export default function ProfileCard() {
   const [selectedRecipe, setSelectedRecipe] = useState<IMyRecipe | null>(null);
   const [showRecipeForm, setShowRecipeForm] = useState(false);
 
+  // Evita hydration mismatch — las fechas y toLocaleDateString
+  // solo se calculan en cliente
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setTimeout(() => setMounted(true), 0);
+  }, []);
+
   // ─────────────────────────────────────────────────────────────
   // TODO BACKEND: reemplazar con useSearchHistory()
   // const { history, clearHistory } = useSearchHistory();
@@ -302,7 +290,6 @@ export default function ProfileCard() {
                 </button>
               )}
             </div>
-
             {favoriteCocktails.length === 0 ? (
               <div className="flex items-center gap-3 p-3 sm:p-4 bg-[#FFF3EA] dark:bg-[#16213e] border border-dashed border-[#EDD9C8] dark:border-[#3a3a5c] rounded-2xl">
                 <i className="bi bi-heart text-[#FF6B6B] text-lg">{""}</i>
@@ -340,7 +327,6 @@ export default function ProfileCard() {
                 </button>
               )}
             </div>
-
             <div className="flex gap-2 sm:gap-3 overflow-x-auto custom-scroll pb-2">
               {recipes.map((recipe) => (
                 <RecipeThumb
@@ -410,9 +396,10 @@ export default function ProfileCard() {
                           {style.label}
                         </p>
                       </div>
+                      {/* Fecha solo en cliente para evitar hydration mismatch */}
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                         <span className="text-[10px] text-[#9B7A6A] dark:text-[#a89088] bg-[#FFF3EA] dark:bg-[#0f0f23] px-2 py-0.5 rounded-full">
-                          {formatDate(item.date)}
+                          {mounted ? formatDate(item.daysAgo) : ""}
                         </span>
                         <i className="bi bi-arrow-up-left text-[#9B7A6A] text-xs group-hover:text-[#4ECDC4] transition-colors">
                           {""}
