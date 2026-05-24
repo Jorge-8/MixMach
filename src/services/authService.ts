@@ -27,6 +27,7 @@ export const authService = {
     async login(data: LoginData): Promise<AuthResponse> {
         const response = await fetch(`${API_BASE_URL}/login/`, {
             method: 'POST',
+            credentials: 'include', // permitir que el navegador reciba y guarde la cookie Set-Cookie
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -47,6 +48,8 @@ export const authService = {
         if (result.user) {
             localStorage.setItem('user', JSON.stringify(result.user));
         }
+        // Marca sesión activa para control del frontend
+        localStorage.setItem('isLoggedIn', 'true');
 
         return result;
     },

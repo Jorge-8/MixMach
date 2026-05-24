@@ -60,7 +60,11 @@ export default function LoginForm() {
           email: form.email,
           password: form.password,
         });
+
         setShowSuccessModal(true);
+        // Redirige inmediatamente al perfil
+        router.push("/profile");
+
       } catch (error: any) {
         setApiError(error.message);
       } finally {

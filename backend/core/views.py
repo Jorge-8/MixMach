@@ -137,7 +137,7 @@ class LoginView(APIView):
 
         refresh = RefreshToken.for_user(user)
 
-        return Response ({
+        data = {
             "message": "Login exitoso",
             "access": str(refresh.access_token),
             "refresh": str(refresh),
@@ -146,7 +146,20 @@ class LoginView(APIView):
                 "email": user.email,
                 "name": user.first_name
             }
-        })
+        }
+
+        response = Response(data)
+        # Set cookie para que el frontend (y middleware) pueda leerlo en peticiones siguientes
+        response.set_cookie(
+            key='access_token',
+            value=str(refresh.access_token),
+            httponly=True,
+            samesite='Lax',
+            secure=not settings.DEBUG,
+            path='/'
+        )
+
+        return response
 
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
