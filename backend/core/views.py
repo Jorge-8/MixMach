@@ -10,6 +10,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer
 from .utils import token_generator
+from rest_framework.permissions import IsAuthenticated
+
+# validacion del correo
+import random
+import string
+from django.core.cache import cache
+from .utils import send_verification_email
+
 
 User = get_user_model()
 
@@ -17,47 +25,90 @@ User = get_user_model()
 class RegisterView(APIView):
 
     def post(self, request):
+        # Validar datos SIN guardar todavía
         serializer = RegisterSerializer(data=request.data)
 
         if serializer.is_valid():
-            user = serializer.save()
+            # Generar código de 6 dígitos
+            verification_code = ''.join(random.choices(string.digits, k=6))
+            
+            # Guardar código en caché por 10 minutos
+            cache_key = f"verify_{request.data['email']}"
+            cache.set(cache_key, {
+                'code': verification_code,
+                'data': serializer.validated_data
+            }, timeout=600)
 
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = token_generator.make_token(user)
-
-            link = f"http://127.0.0.1:8000/api/verify/{uid}/{token}/"
-
-            send_mail(
-                'Verifica tu cuenta',
-                f'Haz clic para verificar: {link}',
-                settings.EMAIL_HOST_USER,
-                [user.email],
-                fail_silently=False,
-            )
-
-            return Response(
-                {"message": "Usuario creado. Revisa tu correo."},
-                status=status.HTTP_201_CREATED
-            )
-
+            # Intentar enviar email
+            try:
+                send_verification_email(request.data['email'], verification_code)
+                return Response(
+                    {"message": "Código enviado a tu correo"},
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                # Si falla el email, eliminar código
+                cache.delete(cache_key)
+                return Response(
+                    {"error": "Error al enviar email. Intenta de nuevo."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Si el serializer no es válido
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyEmailView(APIView):
 
-    def get(self, request, uidb64, token):
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+
+        if not email or not code:
+            return Response(
+                {"error": "Email y código son requeridos"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener código del caché
+        cache_key = f"verify_{email}"
+        stored_data = cache.get(cache_key)
+
+        if not stored_data:
+            return Response(
+                {"error": "Código expirado. Intenta registrarte de nuevo."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if stored_data['code'] != code:
+            return Response(
+                {"error": "Código incorrecto"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # El código es correcto, ahora SÍ guardar el usuario
         try:
-            uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
-        except:
-            return Response({"error": "Link inválido"}, status=400)
+            user = User.objects.create_user(
+                username=stored_data['data']['email'],
+                email=stored_data['data']['email'],
+                first_name=stored_data['data']['first_name'],
+                password=stored_data['data']['password'],
+                is_active=True
+            )
+            
+            # Eliminar código del caché
+            cache.delete(cache_key)
 
-        if token_generator.check_token(user, token):
-            user.is_active = True
-            user.save()
-            return Response({"message": "Cuenta verificada correctamente"})
+            return Response(
+                {"message": "Cuenta verificada correctamente"},
+                status=status.HTTP_201_CREATED
+            )
 
-        return Response({"error": "Token inválido"}, status=400)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
 class LoginView(APIView):
 
@@ -75,7 +126,7 @@ class LoginView(APIView):
         if user is None:
             return Response(
                 {"error": "Credenciales incorrectas"},
-                status=static.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
         if not user.is_active:
@@ -95,4 +146,15 @@ class LoginView(APIView):
                 "email": user.email,
                 "name": user.first_name
             }
+        })
+
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            "id": user.id,
+            "email": user.email,
+            "name": user.first_name,
         })

@@ -6,6 +6,8 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     photo = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Validacion por email
+    email = models.EmailField(unique=True)
 
 
 # 🔹 Ingredientes

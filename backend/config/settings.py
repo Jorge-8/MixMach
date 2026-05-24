@@ -11,6 +11,7 @@ SECRET_KEY = 'django-insecure-0lpi0))v*4z6ks)!ewvao5rbg(bcrg7aeps7wi@17i1y&1u&)b
 DEBUG = True
 ALLOWED_HOSTS = []
 
+# qwq estoy sufriendo
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 EMAIL_HOST = 'smtp.gmail.com'
@@ -19,6 +20,8 @@ EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+DEFAULT_FROM_EMAIL = f"MixMatch <{EMAIL_HOST_USER}>"
 
 INSTALLED_APPS = [
     'django.contrib.admin',

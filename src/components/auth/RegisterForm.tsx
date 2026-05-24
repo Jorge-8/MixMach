@@ -61,23 +61,33 @@ export default function RegisterForm() {
   function validate() {
     const newErrors = { name: "", email: "", password: "", confirm: "" };
     let valid = true;
+
+    // Validar nombre
     if (!form.name.trim()) {
       newErrors.name = "El nombre es obligatorio";
       valid = false;
     }
-    if (!form.email.includes("@") || !form.email.includes(".com")) {
-      newErrors.email = "Ingresa un correo válido (debe tener @ y .com)";
+
+    // Validar email con expresion regular mas robusta
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!form.email || !emailRegex.test(form.email)) {
+      newErrors.email = "Ingresa un correo electrónico válido";
       valid = false;
     }
+
+    // Validar contraseña (mínimo 8 caracteres)
     if (strength < 3) {
       newErrors.password =
         "Debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo";
       valid = false;
     }
+
+    // Validar coincidencia de contraseñas
     if (form.confirm !== form.password) {
       newErrors.confirm = "Las contraseñas no coinciden";
       valid = false;
     }
+
     setErrors(newErrors);
     return valid;
   }
@@ -121,8 +131,19 @@ export default function RegisterForm() {
 
   const codeComplete = code.every((d) => d !== "");
 
-  function handleVerify() {
-    if (codeComplete) router.push("/login?registered=true");
+  async function handleVerify() {
+    if (codeComplete) {
+      setIsLoading(true);
+      try {
+        const codeString = code.join('');
+        await authService.verifyEmail(form.email, codeString);
+        router.push("/login?registered=true");
+      } catch (error: any) {
+        setApiError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   }
 
   return (
@@ -160,21 +181,39 @@ export default function RegisterForm() {
 
         {/* Correo */}
         <div className="flex flex-col gap-1 w-full">
+
           <label className="text-sm text-[#2C1810] dark:text-[#a89088] font-medium">
             Correo electrónico
           </label>
-          <input
-            name="email"
-            type="email"
-            placeholder="tu@correo.com"
-            value={form.email}
-            onChange={handleChange}
-            className={`w-full bg-[#FFF3EA] dark:bg-[#16213e] text-[#2C1810] dark:text-white text-sm border rounded-lg px-3 py-2 outline-none transition-colors
-              ${errors.email ? "border-red-400" : "border-[#EDD9C8] dark:border-[#3a3a5c] focus:border-[#4ECDC4]"}`}
-          />
+          
+          <div className="relative">
+
+            <input
+              name="email"
+              type="email"
+              placeholder="tu@correo.com"
+              value={form.email}
+              onChange={handleChange}
+              className={`w-full bg-[#FFF3EA] dark:bg-[#16213e] text-[#2C1810] dark:text-white text-sm border rounded-lg px-3 py-2 pr-10 outline-none transition-colors
+                ${errors.email ? "border-red-400" : form.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) ? "border-green-400" : "border-[#EDD9C8] dark:border-[#3a3a5c] focus:border-[#4ECDC4]"}`}
+            />
+
+            {form.email && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) ? (
+                  <i className="bi bi-check-circle text-green-500"></i>
+                ) : (
+                  <i className="bi bi-x-circle text-red-400"></i>
+                )}
+              </span>
+            )}
+
+          </div>
+
           {errors.email && (
             <p className="text-xs text-red-400">{errors.email}</p>
           )}
+          
         </div>
 
         {/* Contraseña */}
