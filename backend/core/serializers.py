@@ -13,24 +13,21 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'email', 'first_name', 'password']
 
     def validate_email(self, value):
-
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError(
                 "Este correo ya está registrado"
             )
-
         return value
 
     def create(self, validated_data):
-
         user = User.objects.create_user(
-            username=validated_data['username'],
+            username=validated_data['email'],  # Usar email como username
             email=validated_data['email'],
+            first_name=validated_data.get('first_name', ''),
             password=validated_data['password'],
             is_active=False
         )
-
         return user

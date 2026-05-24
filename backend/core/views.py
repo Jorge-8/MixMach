@@ -62,19 +62,20 @@ class VerifyEmailView(APIView):
 class LoginView(APIView):
 
     def post(self, request):
-
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
 
-        user = authenticate(
-            username=username,
-            password=password
-        )
+        try:
+            user = User.objects.get(email=email)
+            user = authenticate(username=user.username, password=password)
+
+        except User.DoesNotExist:
+            user = None
 
         if user is None:
             return Response(
                 {"error": "Credenciales incorrectas"},
-                status=status.HTTP_401_UNAUTHORIZED
+                status=static.HTTP_401_UNAUTHORIZED
             )
 
         if not user.is_active:
@@ -85,8 +86,13 @@ class LoginView(APIView):
 
         refresh = RefreshToken.for_user(user)
 
-        return Response({
+        return Response ({
             "message": "Login exitoso",
             "access": str(refresh.access_token),
             "refresh": str(refresh),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "name": user.first_name
+            }
         })

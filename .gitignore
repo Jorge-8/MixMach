@@ -14,7 +14,11 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
-.env*
+.env
+.env.local
+.env.development.local
+.env.production.local
+!.env.example
 .vercel
 
 # typescript
@@ -37,6 +41,7 @@ backend/db.sqlite3
 
 # cache de python
 __pycache__/
+backend/__pycache__/
 *.pyc
 *.pyo
 *.pyd
