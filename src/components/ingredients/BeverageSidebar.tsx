@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { normalizeText } from "@/utils/normalize";
-import { ALL_COCKTAILS } from "@/components/match/CocktailGrid";
+import { API_BASE_URL } from "@/constants";
 
 // ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: eliminar este bloque cuando se conecte al back
-// Reemplazar con: const { categories, loading, error } = useBeverages();
+// MANTENER: categorías predefinidas (metadata visual)
+// Estas categorías siguen en el front; el back aporta el catálogo.
 // ═══════════════════════════════════════════════════════════════
 const PREDEFINED_CATEGORIES = [
   {
@@ -168,42 +168,22 @@ const PREDEFINED_CATEGORIES = [
   },
 ];
 // ═══════════════════════════════════════════════════════════════
-// FIN bloque a eliminar cuando se conecte al back
-// ═══════════════════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: descomentar cuando se conecte al back
-// import { useBeverages } from "@/hooks/useBeverages";
-// ═══════════════════════════════════════════════════════════════
-
-// MANTENER: Set de predefinidos para detectar si un cóctel ya tiene categoría
 const ALL_PREDEFINED_NORMALIZED = new Set(
   PREDEFINED_CATEGORIES.flatMap((c) => c.items.map(normalizeText))
 );
 
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: eliminar este bloque cuando se conecte al back
-// Reemplazar con los cócteles que devuelva GET /api/cocktails/
-// filtrados con ALL_PREDEFINED_NORMALIZED para excluir predefinidos
-// ═══════════════════════════════════════════════════════════════
-const OPTIONAL_POOL: string[] = Array.from(
-  new Map(ALL_COCKTAILS.map((c) => [normalizeText(c.name), c.name]))
-)
-  .filter(([norm]) => !ALL_PREDEFINED_NORMALIZED.has(norm))
-  .map(([, original]) => original);
-// ═══════════════════════════════════════════════════════════════
-
 const VISIBLE_COUNT = 8;
 
+////
+
 export interface BeverageFilters {
-  // MANTENER: estos tipos no cambian con el back
   difficulty: "facil" | "medio" | "dificil" | null;
-  drinkType: "alcohol" | "sin-alcohol" | null;
+  is_alcoholic: "alcohol" | "sin-alcohol" | null;
   maxIngr: number | null;
 }
 
 interface Props {
-  // MANTENER: estas props no cambian con el back
   onChange?: (selected: string[]) => void;
   onFiltersChange?: (filters: BeverageFilters) => void;
 }
@@ -214,42 +194,81 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
   const [expanded, setExpanded] = useState<string[]>([]);
   const [search, setSearch] = useState("");
 
-  // Filtros — MANTENER: lógica 100% del front
-  const [difficulty, setDifficulty] =
-    useState<BeverageFilters["difficulty"]>(null);
-  const [drinkType, setDrinkType] =
-    useState<BeverageFilters["drinkType"]>(null);
+  // Filtros — lógica del front
+  const [difficulty, setDifficulty] = useState<BeverageFilters["difficulty"]>(null);
+  const [is_alcoholic, setIsAlcoholic] = useState<BeverageFilters["is_alcoholic"]>(null);
   const [maxIngr, setMaxIngr] = useState<number | null>(null);
   const [maxIngrRange, setMaxIngrRange] = useState<number>(10);
 
-  // ─────────────────────────────────────────────────────────────
-  // TODO BACKEND: descomentar cuando se conecte al back
-  // const { categories, loading, error } = useBeverages();
-  // if (loading) return <p className="p-4 text-sm text-[#9B7A6A]">Cargando...</p>;
-  // if (error)   return <p className="p-4 text-sm text-red-400">{error}</p>;
-  // ─────────────────────────────────────────────────────────────
+  // Datos traídos del back: pool de cócteles (nombres)
+  const [optionalPool, setOptionalPool] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // MANTENER: notifica cambios de selección al padre
+  // Notificaciones al padre
   useEffect(() => {
     onChange?.(selected);
   }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // MANTENER: notifica cambios de filtros al padre
   useEffect(() => {
     onFiltersChange?.({
       difficulty,
-      drinkType,
+      is_alcoholic,
       maxIngr: maxIngr ?? maxIngrRange,
     });
-  }, [difficulty, drinkType, maxIngr, maxIngrRange]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [difficulty, is_alcoholic, maxIngr, maxIngrRange]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch catálogo de la plataforma y construir pool opcional
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(`${API_BASE_URL}/cocktails/platform/`, {
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) throw new Error("Error al cargar catálogo de bebidas");
+        const data = await res.json();
+
+        // Normalizar campos del backend al formato esperado (si hace falta)
+        const dataNormalized = (data || []).map((d: any) => ({
+          ...d,
+          // mantener name y crear isAlcoholic para compatibilidad con frontend
+          name: d.name,
+          isAlcoholic: d.is_alcoholic ?? d.isAlcoholic ?? false,
+        }));
+
+        // Mapear nombres únicos y ordenar (locale-aware)
+        const unique = Array.from(
+          new Map<string, string>(
+            dataNormalized.map((d: any) => [normalizeText(d.name), d.name] as [string, string])
+          ).values()
+        ).sort((a, b) =>
+          a.localeCompare(b, "es", { sensitivity: "base", ignorePunctuation: true })
+        );
+
+        // Excluir los que están en PREDEFINED_CATEGORIES (normalizados)
+        const pool = unique.filter((n) => !ALL_PREDEFINED_NORMALIZED.has(normalizeText(n)));
+
+        setOptionalPool(pool);
+      } catch (err) {
+        console.error(err);
+        setError("No se pudo cargar el catálogo");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+
+  ///////
 
   const qNorm = useMemo(() => normalizeText(search.trim()), [search]);
   const isSearching = search.trim().length > 0;
 
-  // MANTENER: separa categorías con/sin coincidencias
   const { matchingCats, dimmedCats } = useMemo(() => {
-    if (!isSearching)
-      return { matchingCats: PREDEFINED_CATEGORIES, dimmedCats: [] };
+    if (!isSearching) return { matchingCats: PREDEFINED_CATEGORIES, dimmedCats: [] };
     const matching: typeof PREDEFINED_CATEGORIES = [];
     const dimmed: typeof PREDEFINED_CATEGORIES = [];
     for (const cat of PREDEFINED_CATEGORIES) {
@@ -260,11 +279,10 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
     return { matchingCats: matching, dimmedCats: dimmed };
   }, [isSearching, qNorm]);
 
-  // MANTENER: pool opcional — cócteles de ALL_COCKTAILS fuera de categorías predefinidas
   const optionalMatches = useMemo<string[]>(() => {
     if (!isSearching) return [];
-    return OPTIONAL_POOL.filter((n) => normalizeText(n).includes(qNorm));
-  }, [isSearching, qNorm]);
+    return optionalPool.filter((n) => normalizeText(n).includes(qNorm));
+  }, [isSearching, qNorm, optionalPool]);
 
   const nothingFound =
     isSearching && matchingCats.length === 0 && optionalMatches.length === 0;
@@ -288,7 +306,6 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
     setSelected([]);
   }
 
-  // MANTENER: renderCategory — lógica de UI independiente del origen de datos
   function renderCategory(
     cat: (typeof PREDEFINED_CATEGORIES)[number],
     dimmed = false
@@ -313,7 +330,8 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
     return (
       <div
         key={cat.id}
-        className={`mx-3 my-2 rounded-2xl overflow-hidden border ${cat.color.border} transition-all duration-300 ${dimmed ? "opacity-35 pointer-events-none select-none" : ""}`}
+        className={`mx-3 my-2 rounded-2xl overflow-hidden border ${cat.color.border} transition-all duration-300 ${dimmed ? "opacity-35 pointer-events-none select-none" : ""
+          }`}
       >
         <button
           onClick={() => toggleCollapse(cat.id)}
@@ -383,6 +401,9 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
     );
   }
 
+  if (loading) return <p className="p-4 text-sm text-[#9B7A6A]">Cargando catálogo...</p>;
+  if (error) return <p className="p-4 text-sm text-red-400">{error}</p>;
+
   return (
     <aside className="w-72 h-full border-r-2 border-[#EDD9C8] dark:border-[#3a3a5c] flex flex-col flex-shrink-0 overflow-hidden">
       {/* Header */}
@@ -448,8 +469,8 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
         <FiltersBlock
           difficulty={difficulty}
           setDifficulty={setDifficulty}
-          drinkType={drinkType}
-          setDrinkType={setDrinkType}
+          is_alcoholic={is_alcoholic}
+          setIsAlcoholic={setIsAlcoholic}
           maxIngr={maxIngr}
           setMaxIngr={setMaxIngr}
           maxIngrRange={maxIngrRange}
@@ -459,7 +480,7 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
         {/* Categorías con coincidencias */}
         {matchingCats.map((cat) => renderCategory(cat, false))}
 
-        {/* Cócteles opcionales — de ALL_COCKTAILS fuera de predefinidas */}
+        {/* Bebidas opcionales (del catálogo de la plataforma) */}
         {optionalMatches.length > 0 && (
           <div className="mx-3 my-2 rounded-2xl overflow-hidden border-2 border-dashed border-[#4ECDC4]/60 dark:border-[#4ECDC4]/40">
             <div className="flex items-center justify-between px-4 py-3 bg-[#4ECDC4]/10 dark:bg-[#4ECDC4]/5 border-b-2 border-dashed border-[#4ECDC4]/40">
@@ -519,8 +540,8 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
 interface FiltersProps {
   difficulty: BeverageFilters["difficulty"];
   setDifficulty: (v: BeverageFilters["difficulty"]) => void;
-  drinkType: BeverageFilters["drinkType"];
-  setDrinkType: (v: BeverageFilters["drinkType"]) => void;
+  is_alcoholic: BeverageFilters["is_alcoholic"];
+  setIsAlcoholic: (v: BeverageFilters["is_alcoholic"]) => void;
   maxIngr: number | null;
   setMaxIngr: (v: number | null) => void;
   maxIngrRange: number;
@@ -530,8 +551,8 @@ interface FiltersProps {
 function FiltersBlock({
   difficulty,
   setDifficulty,
-  drinkType,
-  setDrinkType,
+  is_alcoholic,
+  setIsAlcoholic,
   maxIngr,
   setMaxIngr,
   maxIngrRange,
@@ -567,9 +588,9 @@ function FiltersBlock({
           {(["alcohol", "sin-alcohol"] as const).map((t) => (
             <button
               key={t}
-              onClick={() => setDrinkType(drinkType === t ? null : t)}
+              onClick={() => setIsAlcoholic(is_alcoholic === t ? null : t)}
               className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 cursor-pointer
-                ${drinkType === t ? "bg-[#FF6B6B] border-[#FF6B6B] text-white" : "bg-white dark:bg-[#16213e] border-[#EDD9C8] dark:border-[#3a3a5c] text-[#9B7A6A] hover:border-[#FF6B6B] hover:text-[#FF6B6B]"}`}
+                ${is_alcoholic === t ? "bg-[#FF6B6B] border-[#FF6B6B] text-white" : "bg-white dark:bg-[#16213e] border-[#EDD9C8] dark:border-[#3a3a5c] text-[#9B7A6A] hover:border-[#FF6B6B] hover:text-[#FF6B6B]"}`}
             >
               {t === "alcohol" ? "Con alcohol" : "Sin alcohol"}
             </button>

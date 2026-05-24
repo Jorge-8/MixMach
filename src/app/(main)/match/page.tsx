@@ -6,14 +6,8 @@ import BeverageSidebar, {
 import CocktailCard from "@/components/match/CocktailCard";
 import CocktailModal from "@/components/match/CocktailModal";
 import { ICocktail } from "@/types/ICocktail";
+import { useCocktails } from "@/hooks/useCocktails";
 import { normalizeText } from "@/utils/normalize";
-
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: eliminar este import cuando se conecte al back
-// Reemplazar con: const { cocktails } = useCocktails(selectedBeverages, filters);
-// ═══════════════════════════════════════════════════════════════
-import { ALL_COCKTAILS } from "@/components/match/CocktailGrid";
-// ═══════════════════════════════════════════════════════════════
 
 export default function MatchPage() {
   const [selectedBeverages, setSelectedBeverages] = useState<string[]>([]);
@@ -24,44 +18,26 @@ export default function MatchPage() {
   });
   const [selected, setSelected] = useState<ICocktail | null>(null);
 
-  // ─────────────────────────────────────────────────────────────
-  // TODO BACKEND: BORRAR este bloque — el back filtra y devuelve los cócteles
-  // El back recibe: selectedBeverages (nombres) + filters y devuelve ICocktail[]
-  // ─────────────────────────────────────────────────────────────
-  const cocktails = (() => {
-    let result =
-      selectedBeverages.length === 0
-        ? ALL_COCKTAILS
-        : ALL_COCKTAILS.filter((c) =>
-            selectedBeverages.some((name) =>
-              normalizeText(c.name).includes(normalizeText(name))
-            )
-          );
+  // Hook que consulta al backend y aplica (si corresponde) filtrado/orden
+  const { cocktails, loading, error } = useCocktails(selectedBeverages, filters);
 
-    // Filtro dificultad
-    if (filters.difficulty) {
-      const map: Record<string, string> = {
-        facil: "Fácil",
-        medio: "Medio",
-        dificil: "Difícil",
-      };
-      result = result.filter((c) => c.difficulty === map[filters.difficulty!]);
-    }
+  // Estado vacío mientras carga
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm text-[#9B7A6A]">Cargando bebidas…</p>
+      </div>
+    );
+  }
 
-    // Filtro tipo
-    if (filters.drinkType === "alcohol")
-      result = result.filter((c) => c.isAlcoholic);
-    if (filters.drinkType === "sin-alcohol")
-      result = result.filter((c) => !c.isAlcoholic);
-
-    // Filtro máximo ingredientes
-    if (filters.maxIngr) {
-      result = result.filter((c) => c.ingredients.length <= filters.maxIngr!);
-    }
-
-    return result;
-  })();
-  // ─────────────────────────────────────────────────────────────
+  // Error al cargar
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full">
@@ -72,8 +48,8 @@ export default function MatchPage() {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Estado vacío — MANTENER */}
-        {cocktails.length === 0 && (
+        {/* Estado vacío — cuando no hay bebidas encontradas */}
+        {(!cocktails || cocktails.length === 0) && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
             <span className="text-5xl bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
               <i className="bi bi-bug"></i>
@@ -88,7 +64,7 @@ export default function MatchPage() {
         )}
 
         {/* Grid — MANTENER */}
-        {cocktails.length > 0 && (
+        {cocktails && cocktails.length > 0 && (
           <div className="flex-1 overflow-y-auto custom-scroll p-6">
             <div className="flex items-center justify-between mb-4">
               <div>

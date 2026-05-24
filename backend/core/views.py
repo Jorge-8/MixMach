@@ -14,6 +14,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions
 from .serializers import IngredientSerializer
 from .models import Ingredient
+from rest_framework import generics, permissions
+from .serializers import CocktailSerializer
+from .models import Cocktail
 
 # validacion del correo
 import random
@@ -182,3 +185,7 @@ class IngredientListView(generics.ListAPIView):
     serializer_class = IngredientSerializer
     permission_classes = [permissions.AllowAny]
 
+class PlatformCocktailListView(generics.ListAPIView):
+    queryset = Cocktail.objects.filter(user__isnull=True).order_by('-created_at')
+    serializer_class = CocktailSerializer
+    permission_classes = [permissions.AllowAny]

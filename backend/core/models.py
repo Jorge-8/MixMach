@@ -18,18 +18,18 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name
 
-
 # 🔹 Cócteles
 class Cocktail(models.Model):
     name = models.CharField(max_length=150)
     description = models.TextField()
     difficulty = models.CharField(max_length=50)
-    drink_type = models.CharField(max_length=50)
+    is_alcoholic = models.BooleanField(default=True)
+    steps = models.JSONField(default=list, blank=True)
+    tip = models.TextField(blank=True, null=True)
     image = models.URLField(blank=True, null=True)
 
     # Usuario creador (para recetas personalizadas)
     user = models.ForeignKey('User', on_delete=models.CASCADE, null=True, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
