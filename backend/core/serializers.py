@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import Ingredient
+from rest_framework import serializers
 
 # Validacion de correos
 from django.core.validators import EmailValidator
@@ -53,3 +55,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             is_active=False
         )
         return user
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name', 'category']

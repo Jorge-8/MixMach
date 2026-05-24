@@ -1,46 +1,39 @@
 import { useState, useEffect } from "react";
-import { getCategories } from "@/services/ingredientService";
-import { ICategory } from "@/types/ICategory";
+import { API_BASE_URL } from "@/constants";
+import { normalizeText } from "@/utils/normalize";
 
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: este hook se activa cuando el back esté listo
-// Por ahora no se usa — el page.tsx usa el arreglo estático
-// Cuando se conecte al back descomentar en match/page.tsx:
-// import { useIngredients } from "@/hooks/useIngredients";
-// const { categories, loading, error } = useIngredients();
-// ═══════════════════════════════════════════════════════════════
-
+// Devuelve optionalPool: lista de nombres (strings) que NO están en los predefinidos
 export function useIngredients() {
-  // MANTENER: estos estados no cambian
-  const [categories, setCategories] = useState<ICategory[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState<string | null>(null);
+  const [optionalPool, setOptionalPool] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // MANTENER: este useEffect no cambia
   useEffect(() => {
-    async function fetchCategories() {
+    async function fetchAll() {
       try {
-        // MANTENER: esta lógica no cambia
         setLoading(true);
         setError(null);
-        const data = await getCategories(); // ← llama al service
-        setCategories(data);
+        const res = await fetch(`${API_BASE_URL}/ingredients/`, {
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) throw new Error("Error al obtener ingredientes desde el back");
+        const data: { id:number; name:string; category:string | null }[] = await res.json();
+
+        // normaliza y deduplica nombres
+        const uniqueNames = Array.from(
+          new Map(data.map((d) => [normalizeText(d.name), d.name])).values()
+        );
+
+        setOptionalPool(uniqueNames);
       } catch (err) {
-        // MANTENER: este manejo de error no cambia
-        setError("No se pudieron cargar los ingredientes");
         console.error(err);
+        setError("No se pudieron cargar los ingredientes");
       } finally {
-        // MANTENER: esto no cambia
         setLoading(false);
       }
     }
-
-    fetchCategories();
+    fetchAll();
   }, []);
 
-  // MANTENER: este return no cambia
-  // loading → true mientras carga, false cuando termina
-  // error   → null si todo bien, mensaje si algo falló
-  // categories → arreglo vacío al inicio, lleno cuando carga
-  return { categories, loading, error };
+  return { optionalPool, loading, error };
 }

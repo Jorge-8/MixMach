@@ -1,14 +1,12 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { normalizeText } from "@/utils/normalize";
-import { ALL_COCKTAILS } from "@/components/match/CocktailGrid";
+import { API_BASE_URL } from "@/constants";
 
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: eliminar este bloque cuando se conecte al back
-// Reemplazar con: const { categories, loading, error } = useIngredients();
-// ═══════════════════════════════════════════════════════════════
-const PREDEFINED_CATEGORIES = [
-  {
+// MANTENER: Set de predefinidos para detectar si un ingrediente ya tiene categoría
+// El mapa `CATEGORY_META` contiene la metadata visual que antes estaba en PREDEFINED_CATEGORIES
+const CATEGORY_META: Record<string, any> = {
+  "Licores": {
     id: "licores",
     emoji: "🍺",
     name: "Licores",
@@ -23,28 +21,13 @@ const PREDEFINED_CATEGORIES = [
         "border-amber-500 ring-2 ring-amber-300 dark:ring-amber-600 bg-amber-50 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300",
       more: "bg-[#FFF1B9] text-amber-500 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/40",
     },
-    items: [
-      "Ron blanco",
-      "Ron oscuro",
-      "Tequila",
-      "Vodka",
-      "Ginebra",
-      "Triple sec",
-      "Whisky",
-      "Brandy",
-      "Licor de café",
-      "Mezcal",
-      "Bourbon",
-      "Champagne",
-    ],
   },
-  {
+  "Jugos y néctares": {
     id: "jugos",
     emoji: "🍊",
     name: "Jugos y néctares",
     color: {
-      headerBg:
-        "bg-orange-100 border-b-2 border-orange-200 dark:bg-orange-950/30",
+      headerBg: "bg-orange-100 border-b-2 border-orange-200 dark:bg-orange-950/30",
       border: "border-2 border-orange-200 dark:border-orange-800",
       header: "text-orange-700 dark:text-orange-400",
       badge: "bg-orange-500",
@@ -54,20 +37,8 @@ const PREDEFINED_CATEGORIES = [
         "border-orange-500 ring-2 ring-orange-300 dark:ring-orange-600 bg-orange-50 dark:bg-orange-900/60 text-orange-700 dark:text-orange-300",
       more: "bg-orange-50 text-orange-500 border-orange-300 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/40",
     },
-    items: [
-      "Jugo de limón",
-      "Jugo de naranja",
-      "Jugo de piña",
-      "Jugo de arándano",
-      "Jugo de mango",
-      "Jugo de maracuyá",
-      "Jugo de tomate",
-      "Néctar de durazno",
-      "Jugo de pomelo",
-      "Jugo de manzana",
-    ],
   },
-  {
+  "Frescos y hierbas": {
     id: "frescos",
     emoji: "🌿",
     name: "Frescos y hierbas",
@@ -82,19 +53,8 @@ const PREDEFINED_CATEGORIES = [
         "border-green-500 ring-2 ring-green-300 dark:ring-green-600 bg-green-50 dark:bg-green-900/60 text-green-700 dark:text-green-300",
       more: "bg-green-50 text-green-500 border-green-300 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/40",
     },
-    items: [
-      "Hierbabuena",
-      "Menta",
-      "Albahaca",
-      "Romero",
-      "Tomillo",
-      "Jengibre",
-      "Pepino",
-      "Cilantro",
-      "Lavanda",
-    ],
   },
-  {
+  "Dulces y jarabes": {
     id: "dulces",
     emoji: "🍬",
     name: "Dulces y jarabes",
@@ -109,19 +69,8 @@ const PREDEFINED_CATEGORIES = [
         "border-pink-500 ring-2 ring-pink-300 dark:ring-pink-600 bg-pink-50 dark:bg-pink-900/60 text-pink-700 dark:text-pink-300",
       more: "bg-pink-50 text-pink-500 border-pink-300 dark:border-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/40",
     },
-    items: [
-      "Azúcar",
-      "Jarabe simple",
-      "Jarabe de agave",
-      "Miel",
-      "Grenadina",
-      "Blue curaçao",
-      "Jarabe de fresa",
-      "Jarabe de vainilla",
-      "Azúcar mascabado",
-    ],
   },
-  {
+  "Gaseosas y mixers": {
     id: "gaseosas",
     emoji: "🫧",
     name: "Gaseosas y mixers",
@@ -136,24 +85,13 @@ const PREDEFINED_CATEGORIES = [
         "border-blue-500 ring-2 ring-blue-300 dark:ring-blue-600 bg-blue-50 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300",
       more: "bg-blue-50 text-blue-500 border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/40",
     },
-    items: [
-      "Soda",
-      "Agua tónica",
-      "Ginger beer",
-      "Ginger ale",
-      "Refresco de cola",
-      "Agua mineral",
-      "Sprite",
-      "Jugo de uva",
-    ],
   },
-  {
+  "Extras": {
     id: "extras",
     emoji: "🧊",
     name: "Extras",
     color: {
-      headerBg:
-        "bg-purple-50 border-b-2 border-purple-200 dark:bg-purple-950/30",
+      headerBg: "bg-purple-50 border-b-2 border-purple-200 dark:bg-purple-950/30",
       border: "border-2 border-purple-200 dark:border-purple-800",
       header: "text-purple-700 dark:text-purple-400",
       badge: "bg-purple-500",
@@ -163,60 +101,23 @@ const PREDEFINED_CATEGORIES = [
         "border-purple-500 ring-2 ring-purple-300 dark:ring-purple-600 bg-purple-50 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300",
       more: "bg-purple-50 text-purple-500 border-purple-300 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/40",
     },
-    items: [
-      "Hielo",
-      "Sal",
-      "Pimienta",
-      "Angostura",
-      "Sal de gusano",
-      "Azúcar glass",
-      "Canela",
-      "Chile en polvo",
-      "Coco rallado",
-    ],
   },
+};
+
+const PREDEFINED_ORDER = [
+  "Licores",
+  "Jugos y néctares",
+  "Frescos y hierbas",
+  "Dulces y jarabes",
+  "Gaseosas y mixers",
+  "Extras",
 ];
-// ═══════════════════════════════════════════════════════════════
-// FIN bloque a eliminar cuando se conecte al back
-// ═══════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: descomentar cuando se conecte al back
-// import { useIngredients } from "@/hooks/useIngredients";
-// MANTENER: PREDEFINED_CATEGORIES — las categorías predefinidas se quedan
-// siempre en el front. El back solo provee el pool de opcionales.
-// ═══════════════════════════════════════════════════════════════
-
-// MANTENER: Set de predefinidos para detectar si un ingrediente ya tiene categoría
-const ALL_PREDEFINED_NORMALIZED = new Set(
-  PREDEFINED_CATEGORIES.flatMap((c) => c.items.map(normalizeText))
-);
-
-// Pool de ingredientes opcionales: ingredientes únicos de los cócteles
-// que NO están en ninguna categoría predefinida.
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: eliminar este bloque cuando se conecte al back
-// Reemplazar con los ingredientes que devuelva GET /api/ingredients/
-// filtrados con ALL_PREDEFINED_NORMALIZED para excluir predefinidos.
-// ═══════════════════════════════════════════════════════════════
-const OPTIONAL_POOL: string[] = Array.from(
-  new Map(
-    ALL_COCKTAILS.flatMap((c) => c.ingredients.map((i) => i.name)).map((n) => [
-      normalizeText(n),
-      n,
-    ])
-  )
-)
-  .filter(([norm]) => !ALL_PREDEFINED_NORMALIZED.has(norm))
-  .map(([, original]) => original);
 
 const VISIBLE_COUNT = 8;
 
 interface Props {
   showFilters?: boolean;
   onSearch?: (selected: string[]) => void;
-  // CORRECCIÓN: onChange se llama en useEffect, no dentro de setState
-  // para evitar el error "Cannot update a component while rendering another"
   onChange?: (selected: string[]) => void;
 }
 
@@ -229,42 +130,92 @@ export default function IngredientSidebar({
   const [expanded, setExpanded] = useState<string[]>([]);
   const [search, setSearch] = useState("");
 
-  // CORRECCIÓN DEL ERROR: onChange después del render, nunca dentro del setter
+  // Estados para categorias traídas del back
+  const [categories, setCategories] = useState<any[]>([]);
+  const [optionalPool, setOptionalPool] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     onChange?.(selected);
   }, [selected]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─────────────────────────────────────────────────────────────
-  // TODO BACKEND: descomentar cuando se conecte al back
-  // const { optionalPool, loading, error } = useIngredients();
-  // if (loading) return <p className="p-4 text-sm text-[#9B7A6A]">Cargando...</p>;
-  // if (error)   return <p className="p-4 text-sm text-red-400">{error}</p>;
-  // ─────────────────────────────────────────────────────────────
+  // Fetch ingredientes del back y agrupar por categoría
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(`${API_BASE_URL}/ingredients/`, {
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) throw new Error("Error al cargar ingredientes desde el servidor");
+        const data: { id:number; name:string; category:string | null }[] = await res.json();
+
+        // Agrupar por category
+        const map = new Map<string, string[]>();
+        for (const it of data) {
+          const catName = it.category?.trim() || "Sin categoría";
+          if (!map.has(catName)) map.set(catName, []);
+          map.get(catName)!.push(it.name);
+        }
+
+        // Construir array de categorías en el orden predefinido
+        const built: any[] = PREDEFINED_ORDER.map((catName) => {
+          const meta = CATEGORY_META[catName]!;
+          
+          //const items = (map.get(catName) || []).sort((a,b)=>a.localeCompare(b,'es'));
+
+          const items = (map.get(catName) || []).sort((a,b) =>
+            a.localeCompare(b, 'es', { sensitivity: 'base', ignorePunctuation: true })
+          );
+          
+          return { id: meta.id, emoji: meta.emoji, name: meta.name, color: meta.color, items };
+        });
+
+        // Opcionales: ingredientes cuyo category no está en PREDEFINED_ORDER
+        const extraItems: string[] = [];
+        for (const [catName, names] of map.entries()) {
+          if (!PREDEFINED_ORDER.includes(catName)) {
+            extraItems.push(...names);
+          }
+        }
+
+        setCategories(built);
+        // pool opcional: únicos, normalizados y ordenados
+        const pool = Array.from(new Map(extraItems.map(n => [normalizeText(n), n])).values());
+        setOptionalPool(pool);
+      } catch (err) {
+        console.error(err);
+        setError("No se pudieron cargar los ingredientes");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
 
   const qNorm = useMemo(() => normalizeText(search.trim()), [search]);
   const isSearching = search.trim().length > 0;
 
-  // MANTENER: separa categorías con/sin coincidencias para ordenar el render
   const { matchingCats, dimmedCats } = useMemo(() => {
     if (!isSearching) {
-      return { matchingCats: PREDEFINED_CATEGORIES, dimmedCats: [] };
+      return { matchingCats: categories, dimmedCats: [] };
     }
-    const matching: typeof PREDEFINED_CATEGORIES = [];
-    const dimmed: typeof PREDEFINED_CATEGORIES = [];
-    for (const cat of PREDEFINED_CATEGORIES) {
-      cat.items.some((i) => normalizeText(i).includes(qNorm))
+    const matching: typeof categories = [];
+    const dimmed: typeof categories = [];
+    for (const cat of categories) {
+      cat.items.some((i: string) => normalizeText(i).includes(qNorm))
         ? matching.push(cat)
         : dimmed.push(cat);
     }
     return { matchingCats: matching, dimmedCats: dimmed };
-  }, [isSearching, qNorm]);
+  }, [isSearching, qNorm, categories]);
 
-  // MANTENER cuando se integre el back — lógica de filtro sobre OPTIONAL_POOL
-  // (o el pool que venga del back)
   const optionalMatches = useMemo<string[]>(() => {
     if (!isSearching) return [];
-    return OPTIONAL_POOL.filter((n) => normalizeText(n).includes(qNorm));
-  }, [isSearching, qNorm]);
+    return optionalPool.filter((n) => normalizeText(n).includes(qNorm));
+  }, [isSearching, qNorm, optionalPool]);
 
   const nothingFound =
     isSearching && matchingCats.length === 0 && optionalMatches.length === 0;
@@ -292,21 +243,19 @@ export default function IngredientSidebar({
     return name;
   }
 
-  // MANTENER: renderCategory — lógica de UI independiente del origen de datos
   function renderCategory(
-    cat: (typeof PREDEFINED_CATEGORIES)[number],
+    cat: (typeof categories)[number],
     dimmed = false
   ) {
     const isCollapsed = collapsed.includes(cat.id);
     const isExpanded = expanded.includes(cat.id);
-    const selectedItems = cat.items.filter((i) => selected.includes(i));
-    const nonSelected = cat.items.filter((i) => !selected.includes(i));
+    const selectedItems = cat.items.filter((i: string) => selected.includes(i));
+    const nonSelected = cat.items.filter((i: string) => !selected.includes(i));
 
-    // Al buscar: coincidencias al frente (dentro de los no-seleccionados)
     let ordered: string[];
     if (isSearching && !dimmed) {
-      const hits = nonSelected.filter((i) => normalizeText(i).includes(qNorm));
-      const rest = nonSelected.filter((i) => !normalizeText(i).includes(qNorm));
+      const hits = nonSelected.filter((i: string) => normalizeText(i).includes(qNorm));
+      const rest = nonSelected.filter((i: string) => !normalizeText(i).includes(qNorm));
       ordered = [...selectedItems, ...hits, ...rest];
     } else {
       ordered = [...selectedItems, ...nonSelected];
@@ -346,7 +295,7 @@ export default function IngredientSidebar({
 
         {!isCollapsed && (
           <div className="px-3 pb-3 pt-2 flex flex-wrap gap-2">
-            {visible.map((item) => {
+            {visible.map((item: string) => {
               const isSel = selected.includes(item);
               const isHit =
                 isSearching && !dimmed && normalizeText(item).includes(qNorm);
@@ -387,6 +336,9 @@ export default function IngredientSidebar({
       </div>
     );
   }
+
+  if (loading) return <p className="p-4 text-sm text-[#9B7A6A]">Cargando ingredientes…</p>;
+  if (error) return <p className="p-4 text-sm text-red-400">{error}</p>;
 
   return (
     <aside className="w-72 h-full border-r-2 border-[#EDD9C8] dark:border-[#3a3a5c] flex flex-col flex-shrink-0 overflow-hidden">
@@ -449,8 +401,6 @@ export default function IngredientSidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scroll">
-        {showFilters && <FiltersBlock />}
-
         {/* Categorías con coincidencias — flotan arriba con items resaltados */}
         {matchingCats.map((cat) => renderCategory(cat, false))}
 
@@ -465,7 +415,7 @@ export default function IngredientSidebar({
                 </span>
               </div>
               <span className="text-[10px] text-[#4ECDC4]/70 font-medium">
-                de los cócteles
+                del pool de la plataforma
               </span>
             </div>
             <div className="px-3 pb-3 pt-2 flex flex-wrap gap-2">
@@ -507,99 +457,5 @@ export default function IngredientSidebar({
         )}
       </div>
     </aside>
-  );
-}
-
-// ── Bloque de filtros ──────────────────────────────────────────
-type Difficulty = "facil" | "medio" | "dificil" | null;
-type DrinkType = "alcohol" | "sin-alcohol" | null;
-
-function FiltersBlock() {
-  const [difficulty, setDifficulty] = useState<Difficulty>(null);
-  const [drinkType, setDrinkType] = useState<DrinkType>(null);
-  const [maxIngr, setMaxIngr] = useState<number | null>(null);
-  const [maxIngrRange, setMaxIngrRange] = useState<number>(10);
-
-  return (
-    <div className="p-4 border-b-2 border-[#EDD9C8] dark:border-[#3a3a5c] flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold text-[#2C1810] dark:text-[#FFF8F0] uppercase tracking-wide">
-          Dificultad
-        </p>
-        <div className="flex gap-1 flex-wrap">
-          {(["facil", "medio", "dificil"] as Difficulty[]).map((d) => (
-            <button
-              key={d}
-              onClick={() => setDifficulty(difficulty === d ? null : d)}
-              className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 cursor-pointer ${difficulty === d ? "bg-[#4ECDC4] border-[#4ECDC4] text-white" : "bg-white dark:bg-[#16213e] border-[#EDD9C8] dark:border-[#3a3a5c] text-[#9B7A6A] hover:border-[#4ECDC4] hover:text-[#4ECDC4]"}`}
-            >
-              {d === "facil" ? "Fácil" : d === "medio" ? "Medio" : "Difícil"}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold text-[#2C1810] dark:text-[#FFF8F0] uppercase tracking-wide">
-          Tipo
-        </p>
-        <div className="flex gap-1 flex-wrap">
-          {(["alcohol", "sin-alcohol"] as DrinkType[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setDrinkType(drinkType === t ? null : t)}
-              className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 cursor-pointer ${drinkType === t ? "bg-[#FF6B6B] border-[#FF6B6B] text-white" : "bg-white dark:bg-[#16213e] border-[#EDD9C8] dark:border-[#3a3a5c] text-[#9B7A6A] hover:border-[#FF6B6B] hover:text-[#FF6B6B]"}`}
-            >
-              {t === "alcohol" ? "Con alcohol" : "Sin alcohol"}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold text-[#2C1810] dark:text-[#FFF8F0] uppercase tracking-wide">
-          Máximo de ingredientes
-        </p>
-        <div className="flex gap-1 flex-wrap">
-          {[
-            { label: "4 o menos", value: 4 },
-            { label: "5", value: 5 },
-            { label: "6", value: 6 },
-            { label: "7", value: 7 },
-          ].map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() =>
-                setMaxIngr(maxIngr === opt.value ? null : opt.value)
-              }
-              className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 cursor-pointer ${maxIngr === opt.value ? "bg-[#FFD93D] border-[#FFD93D] text-[#2C1810]" : "bg-white dark:bg-[#16213e] border-[#EDD9C8] dark:border-[#3a3a5c] text-[#9B7A6A] hover:border-[#FFD93D]"}`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-col gap-1 mt-1">
-          <div className="flex justify-between text-[10px] text-[#9B7A6A] dark:text-[#a89088]">
-            <span>Rango</span>
-            <span className="font-semibold text-[#4ECDC4]">
-              {maxIngrRange} ingredientes
-            </span>
-          </div>
-          <input
-            type="range"
-            min={1}
-            max={15}
-            value={maxIngrRange}
-            onChange={(e) => {
-              setMaxIngrRange(Number(e.target.value));
-              setMaxIngr(null);
-            }}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4ECDC4] bg-[#EDD9C8] dark:bg-[#3a3a5c]"
-          />
-          <div className="flex justify-between text-[10px] text-[#9B7A6A] dark:text-[#a89088]">
-            <span>1</span>
-            <span>15</span>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

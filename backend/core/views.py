@@ -11,6 +11,9 @@ from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer
 from .utils import token_generator
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, permissions
+from .serializers import IngredientSerializer
+from .models import Ingredient
 
 # validacion del correo
 import random
@@ -171,3 +174,11 @@ class ProfileView(APIView):
             "email": user.email,
             "name": user.first_name,
         })
+
+# Ingredientes
+
+class IngredientListView(generics.ListAPIView):
+    queryset = Ingredient.objects.all().order_by('name')
+    serializer_class = IngredientSerializer
+    permission_classes = [permissions.AllowAny]
+
