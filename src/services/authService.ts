@@ -50,6 +50,7 @@ export const authService = {
         }
         // Marca sesión activa para control del frontend
         localStorage.setItem('isLoggedIn', 'true');
+        window.dispatchEvent(new Event('auth-change'));
 
         return result;
     },

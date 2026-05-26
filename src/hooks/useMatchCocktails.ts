@@ -1,4 +1,6 @@
 import { getPlatformCocktails } from "@/services/cocktailService";
+import { myRecipeService } from "@/services/myRecipeService";
+import { authService } from "@/services/authService";
 import { ICocktail } from "@/types/ICocktail";
 import { normalizeText } from "@/utils/normalize";
 import { useState, useEffect } from "react";
@@ -22,6 +24,12 @@ export function useMatchCocktails(selectedBeverages: string[], filters: Beverage
       try {
         setLoading(true);
         let data = await getPlatformCocktails();
+        if (authService.isAuthenticated()) {
+          try {
+            const userRecipes = await myRecipeService.getAll();
+            data = [...data, ...(userRecipes as unknown as ICocktail[])];
+          } catch { /* sin recetas propias */ }
+        }
         if (!mounted) return;
 
         if (filters.difficulty) {

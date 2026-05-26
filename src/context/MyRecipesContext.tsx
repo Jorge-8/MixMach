@@ -25,13 +25,18 @@ export function MyRecipesProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!authService.isAuthenticated()) return;
-    setLoading(true);
-    myRecipeService
-      .getAll()
-      .then(setRecipes)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    function loadRecipes() {
+      if (!authService.isAuthenticated()) return;
+      setLoading(true);
+      myRecipeService
+        .getAll()
+        .then(setRecipes)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+    loadRecipes();
+    window.addEventListener("auth-change", loadRecipes);
+    return () => window.removeEventListener("auth-change", loadRecipes);
   }, []);
 
   const addRecipe = useCallback(async (form: IMyRecipeForm): Promise<IMyRecipe> => {

@@ -27,13 +27,18 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!authService.isAuthenticated()) return;
-    setLoading(true);
-    favoriteService
-      .getAll()
-      .then(setFavoriteCocktails)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    function loadFavorites() {
+      if (!authService.isAuthenticated()) return;
+      setLoading(true);
+      favoriteService
+        .getAll()
+        .then(setFavoriteCocktails)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+    loadFavorites();
+    window.addEventListener("auth-change", loadFavorites);
+    return () => window.removeEventListener("auth-change", loadFavorites);
   }, []);
 
   const favoriteIds = useMemo(
