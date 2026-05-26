@@ -78,7 +78,11 @@ export default function LoginForm() {
       {/* ── Formulario ── */}
       <div className="flex flex-col dark:bg-[#1a1a2e] dark:border-[#3a3a5c] items-center gap-3 bg-[#FFFFFF] border-2 border-[#EDD9C8] rounded-2xl p-8 shadow-xl shadow-[#EDD9C8]/50 mx-auto max-w-sm w-full">
         <div className="w-14 h-14 bg-gradient-to-br from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] rounded-full flex items-center justify-center">
-          <span className="text-white font-bold text-xl">MM</span>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 3L12 14L20 3H4Z" fill="white" stroke="none" />
+            <line x1="12" y1="14" x2="12" y2="20" />
+            <line x1="8" y1="20" x2="16" y2="20" />
+          </svg>
         </div>
 
         <h1 className="text-3xl font-bold">
