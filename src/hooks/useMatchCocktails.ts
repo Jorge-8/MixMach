@@ -1,4 +1,3 @@
-// @/hooks/useMatchCocktails.ts
 import { getPlatformCocktails } from "@/services/cocktailService";
 import { ICocktail } from "@/types/ICocktail";
 import { normalizeText } from "@/utils/normalize";

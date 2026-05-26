@@ -1,3 +1,5 @@
+// Igual este codigo tiene errores y aun no esta conectado con el back
+
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -11,7 +13,7 @@ import RecipeFormModal from "@/components/my-recipes/RecipeFormModal";
 
 // ═══════════════════════════════════════════════════════════════
 // TODO BACKEND: eliminar este import cuando se conecte al back
-//import { ALL_COCKTAILS } from "@/components/match/CocktailGrid";
+import { ALL_COCKTAILS } from "@/components/match/CocktailGrid";
 // Reemplazar con: const { cocktails } = useFavoriteCocktails() → GET /api/favorites/
 // ═══════════════════════════════════════════════════════════════
 

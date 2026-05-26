@@ -1,3 +1,5 @@
+// Este codigo ahorita no sirve, debe conectarse al back para poder mostrar los cocteles
+
 "use client";
 import { useState, useMemo } from "react";
 import { ICocktail } from "@/types/ICocktail";

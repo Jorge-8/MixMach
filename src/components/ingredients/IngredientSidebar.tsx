@@ -3,8 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { normalizeText } from "@/utils/normalize";
 import { API_BASE_URL } from "@/constants";
 
-// MANTENER: Set de predefinidos para detectar si un ingrediente ya tiene categoría
-// El mapa `CATEGORY_META` contiene la metadata visual que antes estaba en PREDEFINED_CATEGORIES
+
 const CATEGORY_META: Record<string, any> = {
   "Licores": {
     id: "licores",

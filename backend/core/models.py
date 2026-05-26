@@ -36,13 +36,6 @@ class Cocktail(models.Model):
     tip = models.TextField(blank=True, null=True)
     image = models.URLField(blank=True, null=True)
 
-    category = models.ForeignKey(
-        BeverageCategory,
-        on_delete=models.SET_NULL,
-        null=True, # clave: los cócteles existentes no se rompen
-        blank=True,
-        related_name='cocktails'
-    )
     # Usuario creador (para recetas personalizadas)
     user = models.ForeignKey(
         'User',

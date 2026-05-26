@@ -4,24 +4,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status, generics, permissions
 
-from django.core.mail import send_mail
 from django.conf import settings
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes
-from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate
-from .serializers import RegisterSerializer
-from .utils import token_generator
-from .serializers import IngredientSerializer
-from .models import Ingredient, Cocktail, BeverageCategory
-from .serializers import CocktailSerializer, BeverageCategorySerializer
-
-# validacion del correo
-import random
-import string
+from django.contrib.auth import get_user_model, authenticate
 from django.core.cache import cache
+
+from .models import Ingredient, Cocktail, BeverageCategory
+from .serializers import RegisterSerializer, IngredientSerializer, CocktailSerializer, BeverageCategorySerializer
 from .utils import send_verification_email
 
+import random
+import string
 
 User = get_user_model()
 
@@ -90,7 +82,6 @@ class VerifyEmailView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # El código es correcto, ahora SÍ guardar el usuario
         try:
             user = User.objects.create_user(
                 username=stored_data['data']['email'],

@@ -7,12 +7,15 @@ import { ICocktail } from "@/types/ICocktail";
 import { useMatchCocktails } from "@/hooks/useMatchCocktails";
 
 export default function MatchPage() {
+
   const [selectedBeverages, setSelectedBeverages] = useState<string[]>([]);
+
   const [filters, setFilters] = useState<BeverageFilters>({
     difficulty: null,
     is_alcoholic: null,
     maxIngr: null,
   });
+
   const [selected, setSelected] = useState<ICocktail | null>(null);
 
   const handleBeverageChange = useCallback((s: string[]) => setSelectedBeverages(s), []);
@@ -27,12 +30,16 @@ export default function MatchPage() {
   );
 
   return (
+
     <div className="flex h-full">
+
       <BeverageSidebar
         onChange={handleBeverageChange}
         onFiltersChange={handleFiltersChange}
       />
+
       <div className="flex-1 flex flex-col overflow-hidden">
+
         {(!cocktails || cocktails.length === 0) && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
             <span className="text-5xl bg-gradient-to-r from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] bg-clip-text text-transparent">
@@ -46,7 +53,6 @@ export default function MatchPage() {
             </p>
           </div>
         )}
-
 
         {cocktails && cocktails.length > 0 && (
           <div className="flex-1 overflow-y-auto custom-scroll p-6">
@@ -73,6 +79,7 @@ export default function MatchPage() {
             </div>
           </div>
         )}
+        
         {selected && (
           <CocktailModal
             cocktail={selected}

@@ -4,9 +4,6 @@ import { ICocktail } from "@/types/ICocktail";
 interface Props {
   cocktail: ICocktail;
   match?: { matched: number; total: number; pct: number };
-  // MANTENER: mode controla qué info muestra la card
-  // "ingredients" → barra de match + % (inicio)
-  // "browse"      → dificultad + num ingredientes (match/búsqueda)
   mode?: "ingredients" | "browse";
   onClick: () => void;
 }

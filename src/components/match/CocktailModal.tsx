@@ -9,9 +9,6 @@ interface Props {
   cocktail: ICocktail;
   match?: { matched: number; total: number; pct: number };
   selectedIngredients?: string[];
-  // MANTENER: mode controla si se muestra la barra y las palomitas individuales
-  // "ingredients" → barra de match + palomita/tache según ingredientes del usuario
-  // "browse"      → sin barra + todos los ingredientes con palomita
   mode?: "ingredients" | "browse";
   onClose: () => void;
 }

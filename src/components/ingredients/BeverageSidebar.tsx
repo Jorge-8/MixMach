@@ -122,12 +122,11 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
 
   useEffect(() => { onChange?.(selected); }, [selected]); // eslint-disable-line
   
-  // ✅ Solo un useEffect
   useEffect(() => {
     onFiltersChange?.({
       difficulty,
       is_alcoholic,
-      maxIngr: maxIngr, // null si no hay botón seleccionado
+      maxIngr: maxIngr ?? maxIngrRange, // null si no hay botón seleccionado
     });
   }, [difficulty, is_alcoholic, maxIngr, maxIngrRange]); // eslint-disable-line
 
@@ -156,7 +155,7 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
           .map((catName) => ({
             ...CATEGORY_META[catName],
             name: catName,
-            items: map.get(catName)!,
+            items: map.get(catName)!.sort((a, b) => a.localeCompare(b, "es")),
           }));
 
         // Extras: grupos no contemplados en CATEGORY_ORDER
