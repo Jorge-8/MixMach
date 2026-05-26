@@ -1,71 +1,70 @@
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: descomentar todo este archivo cuando se conecte al back
-// Endpoint base: /api/my-recipes/
-// Requiere JWT en headers: Authorization: Bearer <token>
-// ═══════════════════════════════════════════════════════════════
+import { API_BASE_URL } from "@/constants";
+import { IMyRecipe, IMyRecipeForm } from "@/types/IMyRecipe";
 
-// import { IMyRecipe, IMyRecipeForm } from "@/types/IMyRecipe";
-// import { API_BASE_URL } from "@/constants";
+function authHeaders() {
+  const token = localStorage.getItem("accessToken");
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
 
-// function authHeaders() {
-//   const token = localStorage.getItem("token"); // o donde guardes el JWT
-//   return {
-//     "Content-Type": "application/json",
-//     Authorization: `Bearer ${token}`,
-//   };
-// }
+function mapRecipe(raw: any): IMyRecipe {
+  return {
+    id: raw.id,
+    name: raw.name,
+    description: raw.description ?? "",
+    difficulty: raw.difficulty,
+    isAlcoholic: raw.is_alcoholic ?? raw.isAlcoholic ?? true,
+    image: raw.image || null,
+    ingredients: (raw.ingredients ?? []).map((ing: any) => ({
+      name: ing.ingredient?.name ?? ing.name ?? "",
+      amount:
+        ing.quantity && ing.unit
+          ? `${ing.quantity} ${ing.unit}`.trim()
+          : ing.amount ?? "",
+    })),
+    steps: raw.steps ?? [],
+    tip: raw.tip ?? "",
+    createdAt: raw.created_at ?? new Date().toISOString(),
+  };
+}
 
-// export const myRecipeService = {
+export const myRecipeService = {
+  async getAll(): Promise<IMyRecipe[]> {
+    const res = await fetch(`${API_BASE_URL}/my-recipes/`, {
+      headers: authHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener las recetas");
+    const data = await res.json();
+    return data.map(mapRecipe);
+  },
 
-//   // GET /api/my-recipes/
-//   async getAll(): Promise<IMyRecipe[]> {
-//     const res = await fetch(`${API_BASE_URL}/my-recipes/`, {
-//       headers: authHeaders(),
-//     });
-//     if (!res.ok) throw new Error("Error al obtener las recetas");
-//     return res.json();
-//   },
+  async create(form: IMyRecipeForm): Promise<IMyRecipe> {
+    const res = await fetch(`${API_BASE_URL}/my-recipes/`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        name: form.name,
+        description: form.description,
+        difficulty: form.difficulty,
+        is_alcoholic: form.isAlcoholic,
+        image: form.image || "",
+        steps: form.steps,
+        tip: form.tip || "",
+        ingredients: form.ingredients,
+      }),
+    });
+    if (!res.ok) throw new Error("Error al crear la receta");
+    const data = await res.json();
+    return mapRecipe(data);
+  },
 
-//   // POST /api/my-recipes/
-//   // Si hay imagen, usar FormData en lugar de JSON
-//   async create(form: IMyRecipeForm): Promise<IMyRecipe> {
-//     const body = new FormData();
-//     body.append("name", form.name);
-//     body.append("description", form.description);
-//     body.append("difficulty", form.difficulty);
-//     body.append("is_alcoholic", String(form.isAlcoholic));
-//     body.append("ingredients", JSON.stringify(form.ingredients));
-//     body.append("steps", JSON.stringify(form.steps));
-//     if (form.tip) body.append("tip", form.tip);
-//     if (form.image && form.image.startsWith("data:")) {
-//       // Convertir base64 a Blob para enviarlo como archivo
-//       const res2 = await fetch(form.image);
-//       const blob = await res2.blob();
-//       body.append("image", blob, "recipe_image.jpg");
-//     }
-//
-//     const token = localStorage.getItem("token");
-//     const res = await fetch(`${API_BASE_URL}/my-recipes/`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` }, // NO poner Content-Type con FormData
-//       body,
-//     });
-//     if (!res.ok) throw new Error("Error al crear la receta");
-//     return res.json();
-//   },
-
-//   // DELETE /api/my-recipes/{id}/
-//   async delete(id: number): Promise<void> {
-//     const res = await fetch(`${API_BASE_URL}/my-recipes/${id}/`, {
-//       method: "DELETE",
-//       headers: authHeaders(),
-//     });
-//     if (!res.ok) throw new Error("Error al eliminar la receta");
-//   },
-// };
-
-// ─────────────────────────────────────────────────────────────
-// ARCHIVO PREPARADO — no hay código activo aquí todavía
-// Descomentar el bloque de arriba cuando se conecte el back
-// ─────────────────────────────────────────────────────────────
-export {};
+  async delete(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/my-recipes/${id}/`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al eliminar la receta");
+  },
+};

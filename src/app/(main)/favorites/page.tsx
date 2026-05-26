@@ -1,5 +1,3 @@
-// Este codigo ahorita no sirve, debe conectarse al back para poder mostrar los cocteles
-
 "use client";
 import { useState, useMemo } from "react";
 import { ICocktail } from "@/types/ICocktail";
@@ -7,45 +5,24 @@ import { useFavorites } from "@/context/FavoritesContext";
 import FavoriteCard from "@/components/favorites/FavoriteCard";
 import CocktailModal from "@/components/match/CocktailModal";
 
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: eliminar este import cuando se conecte al back
-// Reemplazar con: const { favorites, loading } = useFavoritesData();
-// Endpoint: GET /api/favorites/ → devuelve ICocktail[] del usuario
-// ═══════════════════════════════════════════════════════════════
-import { ALL_COCKTAILS } from "@/components/match/CocktailGrid";
-// FIN bloque a eliminar
-// ═══════════════════════════════════════════════════════════════
-
 export default function FavoritesPage() {
-  // MANTENER: favoriteIds viene del context global
-  // TODO BACKEND: cuando se conecte, el context ya tendrá los ids del servidor
-  const { favoriteIds } = useFavorites();
+  const { favoriteCocktails } = useFavorites();
 
   const [selected, setSelected] = useState<ICocktail | null>(null);
   const [search, setSearch] = useState("");
 
-  // ─────────────────────────────────────────────────────────────
-  // TODO BACKEND: eliminar este useMemo — el back devuelve solo los favoritos
-  // Reemplazar con: const favorites = useFavoritesData() que llama al endpoint
-  // ─────────────────────────────────────────────────────────────
-  const favorites = useMemo(
-    () => ALL_COCKTAILS.filter((c) => favoriteIds.has(c.id)),
-    [favoriteIds]
-  );
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return favorites;
-    return favorites.filter(
+    if (!q) return favoriteCocktails;
+    return favoriteCocktails.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.description?.toLowerCase().includes(q) ||
         c.ingredients.some((i) => i.name.toLowerCase().includes(q))
     );
-  }, [favorites, search]);
+  }, [favoriteCocktails, search]);
 
-  // Modo vacío: sin favoritos aún
-  const noFavorites = favorites.length === 0;
+  const noFavorites = favoriteCocktails.length === 0;
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -92,8 +69,8 @@ export default function FavoritesPage() {
               </h1>
             </div>
             <p className="text-xs text-[#9B7A6A] dark:text-[#a89088] mb-4">
-              {favorites.length}{" "}
-              {favorites.length === 1
+              {favoriteCocktails.length}{" "}
+              {favoriteCocktails.length === 1
                 ? "cóctel guardado"
                 : "cócteles guardados"}
             </p>
@@ -158,7 +135,7 @@ export default function FavoritesPage() {
         </>
       )}
 
-      {/* Modal de detalle — modo browse: todos los ingredientes con palomita */}
+      {/* Modal de detalle */}
       {selected && (
         <CocktailModal
           cocktail={selected}

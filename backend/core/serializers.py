@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Ingredient, Cocktail, CocktailIngredient, BeverageCategory
+from .models import Ingredient, Cocktail, CocktailIngredient, BeverageCategory, Favorite
 
 # Validacion de correos
 from django.core.validators import EmailValidator
@@ -82,3 +82,25 @@ class BeverageCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = BeverageCategory
         fields = ['id', 'name', 'category']
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    cocktail = CocktailSerializer(read_only=True)
+    cocktail_id = serializers.PrimaryKeyRelatedField(
+        queryset=Cocktail.objects.all(), source='cocktail', write_only=True
+    )
+
+    class Meta:
+        model = Favorite
+        fields = ['id', 'cocktail', 'cocktail_id', 'created_at']
+
+
+class UserCocktailSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150)
+    description = serializers.CharField(default='')
+    difficulty = serializers.CharField(max_length=50)
+    is_alcoholic = serializers.BooleanField(default=True)
+    image = serializers.CharField(allow_null=True, required=False, allow_blank=True)
+    steps = serializers.JSONField(default=list)
+    tip = serializers.CharField(allow_blank=True, required=False, default='')
+    ingredients = serializers.JSONField(default=list)  # [{name, amount}]

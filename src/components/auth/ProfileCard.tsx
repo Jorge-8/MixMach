@@ -1,43 +1,15 @@
-// Igual este codigo tiene errores y aun no esta conectado con el back
-
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ICocktail } from "@/types/ICocktail";
 import { IMyRecipe, IMyRecipeForm } from "@/types/IMyRecipe";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useMyRecipes } from "@/context/MyRecipesContext";
+import { authService } from "@/services/authService";
 import CocktailModal from "@/components/match/CocktailModal";
 import MyRecipeModal from "@/components/my-recipes/MyRecipeModal";
 import RecipeFormModal from "@/components/my-recipes/RecipeFormModal";
 
-// ═══════════════════════════════════════════════════════════════
-// TODO BACKEND: eliminar este import cuando se conecte al back
-import { ALL_COCKTAILS } from "@/components/match/CocktailGrid";
-// Reemplazar con: const { cocktails } = useFavoriteCocktails() → GET /api/favorites/
-// ═══════════════════════════════════════════════════════════════
-
-// ─────────────────────────────────────────────────────────────
-// TODO BACKEND: eliminar MOCK_USER cuando se conecte al back
-// Reemplazar con: const { user } = useAuth() → GET /api/auth/me/
-// ─────────────────────────────────────────────────────────────
-const MOCK_USER = {
-  name: "Carla Mendoza",
-  email: "carla.mendoza@email.com",
-};
-
-// ─────────────────────────────────────────────────────────────
-// TODO BACKEND: eliminar MOCK_HISTORY_DATA cuando se conecte al back
-// Reemplazar con: const { history, clearHistory } = useSearchHistory()
-// Endpoint: GET /api/search-history/ y DELETE /api/search-history/
-// Las fechas vienen como ISO string del back y se convierten a Date en el hook
-// ─────────────────────────────────────────────────────────────
-const MOCK_HISTORY_DATA = [
-  { id: 1, query: "Mojito", type: "ingrediente", daysAgo: 1 },
-  { id: 2, query: "Margarita", type: "bebida", daysAgo: 2 },
-  { id: 3, query: "Piña Colada", type: "bebida", daysAgo: 3 },
-  { id: 4, query: "Ron + Limón", type: "ingrediente", daysAgo: 5 },
-];
 
 function difficultyColor(d: string) {
   if (d === "Fácil") return "text-green-600 dark:text-green-400";
@@ -181,60 +153,42 @@ function CreateRecipeThumb({ onClick }: { onClick: () => void }) {
 
 export default function ProfileCard() {
   const router = useRouter();
-  const { favoriteIds } = useFavorites();
+  const { favoriteCocktails } = useFavorites();
   const { recipes, addRecipe, deleteRecipe } = useMyRecipes();
 
-  const [selectedCocktail, setSelectedCocktail] = useState<ICocktail | null>(
-    null
-  );
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [selectedCocktail, setSelectedCocktail] = useState<ICocktail | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<IMyRecipe | null>(null);
   const [showRecipeForm, setShowRecipeForm] = useState(false);
-
-  // Evita hydration mismatch — las fechas y toLocaleDateString
-  // solo se calculan en cliente
   const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
     setTimeout(() => setMounted(true), 0);
+    const stored = authService.getUser();
+    if (stored) setUser(stored);
   }, []);
 
-  // ─────────────────────────────────────────────────────────────
-  // TODO BACKEND: reemplazar con useSearchHistory()
-  // const { history, clearHistory } = useSearchHistory();
-  // ─────────────────────────────────────────────────────────────
-  const [history, setHistory] = useState(MOCK_HISTORY_DATA);
+  const [history, setHistory] = useState<{ id: number; query: string; type: string; daysAgo: number }[]>([]);
 
-  // ─────────────────────────────────────────────────────────────
-  // TODO BACKEND: eliminar este useMemo
-  // Reemplazar con: const { cocktails } = useFavoriteCocktails()
-  // ─────────────────────────────────────────────────────────────
-  const favoriteCocktails = useMemo(
-    () => ALL_COCKTAILS.filter((c) => favoriteIds.has(c.id)),
-    [favoriteIds]
-  );
+  const userInitials = user ? getInitials(user.name || user.email) : "?";
 
-  const userInitials = getInitials(MOCK_USER.name);
-
-  function handleSaveRecipe(form: IMyRecipeForm) {
-    // TODO BACKEND: reemplazar con: await myRecipeService.create(form);
-    addRecipe(form);
+  async function handleSaveRecipe(form: IMyRecipeForm) {
+    await addRecipe(form);
     setShowRecipeForm(false);
   }
 
-  function handleDeleteRecipe(id: number) {
-    // TODO BACKEND: reemplazar con: await myRecipeService.delete(id);
-    deleteRecipe(id);
+  async function handleDeleteRecipe(id: number) {
+    await deleteRecipe(id);
     setSelectedRecipe(null);
   }
 
   function handleLogout() {
-    // TODO BACKEND: llamar a POST /api/auth/logout/ y limpiar token JWT
+    authService.logout();
     localStorage.removeItem("isLoggedIn");
     router.push("/login");
   }
 
   function handleClearHistory() {
-    // TODO BACKEND: reemplazar con: await searchHistoryService.clear()
-    // DELETE /api/search-history/
     setHistory([]);
   }
 
@@ -253,10 +207,10 @@ export default function ProfileCard() {
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-base sm:text-lg font-bold text-[#2C1810] dark:text-[#FFF8F0] truncate">
-                {MOCK_USER.name}
+                {user?.name || user?.email || ""}
               </h2>
               <p className="text-xs text-[#9B7A6A] dark:text-[#a89088] truncate">
-                {MOCK_USER.email}
+                {user?.email || ""}
               </p>
               <div className="flex gap-3 sm:gap-4 mt-2">
                 <div className="text-center">

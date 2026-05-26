@@ -8,8 +8,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, authenticate
 from django.core.cache import cache
 
-from .models import Ingredient, Cocktail, BeverageCategory
-from .serializers import RegisterSerializer, IngredientSerializer, CocktailSerializer, BeverageCategorySerializer
+from .models import Ingredient, Cocktail, BeverageCategory, Favorite, CocktailIngredient
+from .serializers import RegisterSerializer, IngredientSerializer, CocktailSerializer, BeverageCategorySerializer, FavoriteSerializer, UserCocktailSerializer
 from .utils import send_verification_email
 
 import random
@@ -183,3 +183,89 @@ class BeverageCategoryListView(generics.ListAPIView):
     queryset = BeverageCategory.objects.all().order_by('id')
     serializer_class = BeverageCategorySerializer
     permission_classes = [permissions.AllowAny]
+
+
+class FavoriteListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        favorites = Favorite.objects.filter(user=request.user).select_related('cocktail')
+        serializer = FavoriteSerializer(favorites, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = FavoriteSerializer(data=request.data)
+        if serializer.is_valid():
+            cocktail = serializer.validated_data['cocktail']
+            favorite, created = Favorite.objects.get_or_create(
+                user=request.user, cocktail=cocktail
+            )
+            return Response(
+                FavoriteSerializer(favorite).data,
+                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FavoriteDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, cocktail_id):
+        deleted, _ = Favorite.objects.filter(
+            user=request.user, cocktail_id=cocktail_id
+        ).delete()
+        if deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"error": "Favorito no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class MyRecipeListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        recipes = Cocktail.objects.filter(user=request.user).order_by('-created_at')
+        serializer = CocktailSerializer(recipes, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = UserCocktailSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        cocktail = Cocktail.objects.create(
+            name=data['name'],
+            description=data.get('description', ''),
+            difficulty=data['difficulty'],
+            is_alcoholic=data.get('is_alcoholic', True),
+            image=data.get('image') or None,
+            steps=data.get('steps', []),
+            tip=data.get('tip', ''),
+            user=request.user,
+        )
+
+        for ing_data in data.get('ingredients', []):
+            name = ing_data.get('name', '').strip()
+            if not name:
+                continue
+            ingredient, _ = Ingredient.objects.get_or_create(name=name)
+            CocktailIngredient.objects.create(
+                cocktail=cocktail,
+                ingredient=ingredient,
+                quantity=ing_data.get('amount', ''),
+                unit='',
+            )
+
+        return Response(CocktailSerializer(cocktail).data, status=status.HTTP_201_CREATED)
+
+
+class MyRecipeDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        try:
+            recipe = Cocktail.objects.get(pk=pk, user=request.user)
+        except Cocktail.DoesNotExist:
+            return Response({"error": "Receta no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -32,15 +32,13 @@ export default function MyRecipesPage() {
     );
   }, [recipes, search]);
 
-  // TODO BACKEND: reemplazar con: await myRecipeService.create(form);
-  function handleSave(form: IMyRecipeForm) {
-    addRecipe(form);
+  async function handleSave(form: IMyRecipeForm) {
+    await addRecipe(form);
     setShowForm(false);
   }
 
-  // TODO BACKEND: reemplazar con: await myRecipeService.delete(id);
-  function handleDelete(id: number) {
-    deleteRecipe(id);
+  async function handleDelete(id: number) {
+    await deleteRecipe(id);
     if (selectedRecipe?.id === id) setSelectedRecipe(null);
   }
 
