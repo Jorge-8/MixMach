@@ -18,6 +18,14 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name
 
+# 🔹 Categoria de cocteles
+class BeverageCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
+
 # 🔹 Cócteles
 class Cocktail(models.Model):
     name = models.CharField(max_length=150)
@@ -28,8 +36,21 @@ class Cocktail(models.Model):
     tip = models.TextField(blank=True, null=True)
     image = models.URLField(blank=True, null=True)
 
+    category = models.ForeignKey(
+        BeverageCategory,
+        on_delete=models.SET_NULL,
+        null=True, # clave: los cócteles existentes no se rompen
+        blank=True,
+        related_name='cocktails'
+    )
     # Usuario creador (para recetas personalizadas)
-    user = models.ForeignKey('User', on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

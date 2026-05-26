@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Ingredient, Cocktail, CocktailIngredient
+from .models import Ingredient, Cocktail, CocktailIngredient, BeverageCategory
 
 # Validacion de correos
 from django.core.validators import EmailValidator
@@ -77,3 +77,8 @@ class CocktailSerializer(serializers.ModelSerializer):
             'id','name','description','difficulty','image',
             'is_alcoholic','steps','tip','created_at','user','ingredients'
         ]
+
+class BeverageCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BeverageCategory
+        fields = ['id', 'name', 'category']

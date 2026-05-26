@@ -1,22 +1,20 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status, generics, permissions
+
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer
 from .utils import token_generator
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics, permissions
 from .serializers import IngredientSerializer
-from .models import Ingredient
-from rest_framework import generics, permissions
-from .serializers import CocktailSerializer
-from .models import Cocktail
+from .models import Ingredient, Cocktail, BeverageCategory
+from .serializers import CocktailSerializer, BeverageCategorySerializer
 
 # validacion del correo
 import random
@@ -188,4 +186,9 @@ class IngredientListView(generics.ListAPIView):
 class PlatformCocktailListView(generics.ListAPIView):
     queryset = Cocktail.objects.filter(user__isnull=True).order_by('-created_at')
     serializer_class = CocktailSerializer
+    permission_classes = [permissions.AllowAny]
+
+class BeverageCategoryListView(generics.ListAPIView):
+    queryset = BeverageCategory.objects.all().order_by('id')
+    serializer_class = BeverageCategorySerializer
     permission_classes = [permissions.AllowAny]

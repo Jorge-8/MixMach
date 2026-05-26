@@ -1,8 +1,9 @@
 from django.contrib import admin
-from .models import User, Ingredient, Cocktail, CocktailIngredient, Favorite, SearchHistory
+from .models import User, Ingredient, BeverageCategory, Cocktail, CocktailIngredient, Favorite, SearchHistory
 
 admin.site.register(User)
 admin.site.register(Ingredient)
+admin.site.register(BeverageCategory)
 admin.site.register(Cocktail)
 admin.site.register(CocktailIngredient)
 admin.site.register(Favorite)

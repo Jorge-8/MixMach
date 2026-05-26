@@ -1,25 +1,51 @@
-//import { useState, useEffect } from "react";
 import { getPlatformCocktails } from "@/services/cocktailService";
 import { ICocktail } from "@/types/ICocktail";
 import { ingredientMatches } from "@/utils/normalize";
-
 import { useState, useEffect, useRef } from "react";
+import { BeverageFilters } from "@/components/ingredients/BeverageSidebar";
 
-export function useCocktails(selectedIngredients: string[]) {
+export function useCocktails(selectedIngredients: string[], filters?: BeverageFilters) {
   const [cocktails, setCocktails] = useState<ICocktail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Serializar el array para que la comparación sea por valor, no por referencia
   const depsKey = selectedIngredients.slice().sort().join(",");
+  // Serializar filtros también para detectar cambios
+  const filterKey = JSON.stringify(filters ?? {});
+
+  const prevDepsKey = useRef(depsKey + filterKey);
+  if (prevDepsKey.current !== depsKey + filterKey) {
+    prevDepsKey.current = depsKey + filterKey;
+    setLoading(true);
+  }
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
         setLoading(true);
-        const data = await getPlatformCocktails();
+        let data = await getPlatformCocktails();
         if (!mounted) return;
+
+        // Aplicar filtros
+        if (filters?.difficulty) {
+          const map: Record<string, string> = {
+            facil: "Fácil",
+            medio: "Medio",
+            dificil: "Difícil",
+          };
+          const target = map[filters.difficulty];
+          data = data.filter((c) => c.difficulty === target);
+        }
+        if (filters?.is_alcoholic === "alcohol") {
+          data = data.filter((c) => c.isAlcoholic === true);
+        } else if (filters?.is_alcoholic === "sin-alcohol") {
+          data = data.filter((c) => c.isAlcoholic === false);
+        }
+        if (filters?.maxIngr) {
+          data = data.filter((c) => c.ingredients.length <= filters.maxIngr!);
+        }
+
         if (!selectedIngredients || selectedIngredients.length === 0) {
           setCocktails(data);
         } else {
@@ -46,7 +72,7 @@ export function useCocktails(selectedIngredients: string[]) {
     }
     load();
     return () => { mounted = false; };
-  }, [depsKey]); // ← string estable, no el array
+  }, [depsKey, filterKey]); // ← ambos keys
 
   return { cocktails, loading, error };
 }
