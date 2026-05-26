@@ -5,12 +5,14 @@ import LoginForm from "@/components/auth/LoginForm";
 import ProfileCard from "@/components/auth/ProfileCard";
 
 export default function ProfilePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const logged = localStorage.getItem("isLoggedIn");
-    setTimeout(() => setIsLoggedIn(logged === "true"), 0);
+    setIsLoggedIn(logged === "true");
   }, []);
+
+  if (isLoggedIn === null) return null;
 
   // Sin sesión: centrar el formulario de login
   if (!isLoggedIn) {

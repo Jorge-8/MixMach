@@ -6,7 +6,7 @@ interface Props {
   onClose: () => void;
   // TODO BACKEND: onSave llamará a POST /api/my-recipes/ con el body del formulario
   // y recibirá el IMyRecipe creado (con id y createdAt del servidor)
-  onSave: (form: IMyRecipeForm) => void;
+  onSave: (form: IMyRecipeForm) => Promise<void>;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -137,10 +137,12 @@ export default function RecipeFormModal({ onClose, onSave }: Props) {
 
     const finalForm: IMyRecipeForm = { ...form, ingredients: builtIngredients };
 
-    // TODO BACKEND: reemplazar con: const created = await myRecipeService.create(finalForm);
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-    onSave(finalForm);
+    try {
+      await onSave(finalForm);
+    } catch {
+      setError("No se pudo guardar la receta. Inténtalo de nuevo.");
+      setSaving(false);
+    }
   }
 
   const isUnitless = (unit: string) => unit === "al gusto" || unit === "pizca";

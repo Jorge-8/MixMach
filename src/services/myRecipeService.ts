@@ -23,7 +23,7 @@ function mapRecipe(raw: any): IMyRecipe {
       amount:
         ing.quantity && ing.unit
           ? `${ing.quantity} ${ing.unit}`.trim()
-          : ing.amount ?? "",
+          : ing.quantity ?? ing.amount ?? "",
     })),
     steps: raw.steps ?? [],
     tip: raw.tip ?? "",
