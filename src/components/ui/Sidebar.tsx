@@ -18,7 +18,11 @@ export default function Sidebar() {
     <nav className="w-18 h-screen bg-[#FFFFFF] dark:bg-[#0f0f23] border-r-2 border-[#EDD9C8] dark:border-[#3a3a5c] flex flex-col items-center py-5 gap-2 flex-shrink-0">
       {/* Logo */}
       <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B6B] via-[#4ECDC4] to-[#FFD93D] rounded-full flex items-center justify-center mb-4">
-        <span className="text-white font-bold text-sm">MM</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 3L12 14L20 3H4Z" fill="white" stroke="none" />
+          <line x1="12" y1="14" x2="12" y2="20" />
+          <line x1="8" y1="20" x2="16" y2="20" />
+        </svg>
       </div>
       {/* Botones */}
       {navItems.map((item) => {
