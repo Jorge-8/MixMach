@@ -114,6 +114,7 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
   const [is_alcoholic, setIsAlcoholic] = useState<BeverageFilters["is_alcoholic"]>(null);
   const [maxIngr, setMaxIngr] = useState<number | null>(null);
   const [maxIngrRange, setMaxIngrRange] = useState<number>(10);
+  const [sliderTouched, setSliderTouched] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [optionalPool, setOptionalPool] = useState<string[]>([]);
@@ -126,9 +127,9 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
     onFiltersChange?.({
       difficulty,
       is_alcoholic,
-      maxIngr: maxIngr ?? maxIngrRange, // null si no hay botón seleccionado
+      maxIngr: maxIngr ?? (sliderTouched ? maxIngrRange : null),
     });
-  }, [difficulty, is_alcoholic, maxIngr, maxIngrRange]); // eslint-disable-line
+  }, [difficulty, is_alcoholic, maxIngr, maxIngrRange, sliderTouched]); // eslint-disable-line
 
   useEffect(() => {
     async function load() {
@@ -208,6 +209,14 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
     setExpanded((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
   }
   function clearAll() { setSelected([]); }
+  function clearFilters() {
+    setDifficulty(null);
+    setIsAlcoholic(null);
+    setMaxIngr(null);
+    setMaxIngrRange(10);
+    setSliderTouched(false);
+  }
+  const hasActiveFilters = difficulty !== null || is_alcoholic !== null || maxIngr !== null || sliderTouched;
 
   function renderCategory(cat: Category, dimmed = false) {
     const isCollapsed = collapsed.includes(cat.id);
@@ -291,8 +300,9 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-bold text-[#2C1810] dark:text-[#FFF8F0] text-base">Bebidas</h2>
           {selected.length > 0 && (
-            <button onClick={clearAll} className="text-xs text-[#FF6B6B] hover:underline cursor-pointer">
-              Limpiar todo
+            <button onClick={clearAll} className="flex items-center gap-1 text-xs text-[#FF6B6B] hover:underline cursor-pointer">
+              <i className="bi bi-x-circle text-xs">{""}</i>
+              Limpiar
             </button>
           )}
         </div>
@@ -342,6 +352,10 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
           setMaxIngr={setMaxIngr}
           maxIngrRange={maxIngrRange}
           setMaxIngrRange={setMaxIngrRange}
+          sliderTouched={sliderTouched}
+          setSliderTouched={setSliderTouched}
+          onClear={clearFilters}
+          hasActive={hasActiveFilters}
         />
 
         {matchingCats.map((cat) => renderCategory(cat, false))}
@@ -399,11 +413,27 @@ interface FiltersProps {
   setMaxIngr: (v: number | null) => void;
   maxIngrRange: number;
   setMaxIngrRange: (v: number) => void;
+  sliderTouched: boolean;
+  setSliderTouched: (v: boolean) => void;
+  onClear: () => void;
+  hasActive: boolean;
 }
 
-function FiltersBlock({ difficulty, setDifficulty, is_alcoholic, setIsAlcoholic, maxIngr, setMaxIngr, maxIngrRange, setMaxIngrRange }: FiltersProps) {
+function FiltersBlock({ difficulty, setDifficulty, is_alcoholic, setIsAlcoholic, maxIngr, setMaxIngr, maxIngrRange, setMaxIngrRange, setSliderTouched, onClear, hasActive }: FiltersProps) {
   return (
     <div className="p-4 border-b-2 border-[#EDD9C8] dark:border-[#3a3a5c] flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-[#2C1810] dark:text-[#FFF8F0] uppercase tracking-wide">Filtros</p>
+        {hasActive && (
+          <button
+            onClick={onClear}
+            className="flex items-center gap-1 text-xs text-[#FF6B6B] hover:underline cursor-pointer"
+          >
+            <i className="bi bi-x-circle text-xs">{""}</i>
+            Limpiar filtros
+          </button>
+        )}
+      </div>
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold text-[#2C1810] dark:text-[#FFF8F0] uppercase tracking-wide">Dificultad</p>
         <div className="flex gap-1 flex-wrap">
@@ -444,7 +474,7 @@ function FiltersBlock({ difficulty, setDifficulty, is_alcoholic, setIsAlcoholic,
             <span className="font-semibold text-[#4ECDC4]">{maxIngrRange} ingredientes</span>
           </div>
           <input type="range" min={1} max={15} value={maxIngrRange}
-            onChange={(e) => { setMaxIngrRange(Number(e.target.value)); setMaxIngr(null); }}
+            onChange={(e) => { setMaxIngrRange(Number(e.target.value)); setMaxIngr(null); setSliderTouched(true); }}
             className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4ECDC4] bg-[#EDD9C8] dark:bg-[#3a3a5c]"
           />
           <div className="flex justify-between text-[10px] text-[#9B7A6A] dark:text-[#a89088]">

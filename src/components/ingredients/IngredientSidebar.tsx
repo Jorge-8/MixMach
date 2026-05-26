@@ -350,9 +350,10 @@ export default function IngredientSidebar({
           {selected.length > 0 && (
             <button
               onClick={clearAll}
-              className="text-xs text-[#FF6B6B] hover:underline cursor-pointer"
+              className="flex items-center gap-1 text-xs text-[#FF6B6B] hover:underline cursor-pointer"
             >
-              Limpiar todo
+              <i className="bi bi-x-circle text-xs">{""}</i>
+              Limpiar
             </button>
           )}
         </div>
