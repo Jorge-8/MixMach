@@ -4,7 +4,7 @@ import BeverageSidebar, { BeverageFilters } from "@/components/ingredients/Bever
 import CocktailCard from "@/components/match/CocktailCard";
 import CocktailModal from "@/components/match/CocktailModal";
 import { ICocktail } from "@/types/ICocktail";
-import { useCocktails } from "@/hooks/useCocktails";
+import { useMatchCocktails } from "@/hooks/useMatchCocktails";
 
 export default function MatchPage() {
   const [selectedBeverages, setSelectedBeverages] = useState<string[]>([]);
@@ -15,17 +15,11 @@ export default function MatchPage() {
   });
   const [selected, setSelected] = useState<ICocktail | null>(null);
 
-  // ✅ Callbacks ANTES de cualquier return condicional
   const handleBeverageChange = useCallback((s: string[]) => setSelectedBeverages(s), []);
   const handleFiltersChange = useCallback((f: BeverageFilters) => setFilters(f), []);
 
-  const { cocktails, loading, error } = useCocktails(selectedBeverages, filters);
+  const { cocktails, loading, error } = useMatchCocktails(selectedBeverages, filters);
 
-  if (loading) return (
-    <div className="flex-1 flex items-center justify-center">
-      <p className="text-sm text-[#9B7A6A]">Cargando bebidas…</p>
-    </div>
-  );
   if (error) return (
     <div className="flex-1 flex items-center justify-center">
       <p className="text-sm text-red-400">{error}</p>
@@ -38,7 +32,6 @@ export default function MatchPage() {
         onChange={handleBeverageChange}
         onFiltersChange={handleFiltersChange}
       />
-
       <div className="flex-1 flex flex-col overflow-hidden">
         {(!cocktails || cocktails.length === 0) && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
@@ -54,6 +47,7 @@ export default function MatchPage() {
           </div>
         )}
 
+
         {cocktails && cocktails.length > 0 && (
           <div className="flex-1 overflow-y-auto custom-scroll p-6">
             <div className="flex items-center justify-between mb-4">
@@ -62,11 +56,11 @@ export default function MatchPage() {
                   Catálogo de bebidas
                 </h2>
                 <p className="text-xs text-[#9B7A6A] dark:text-[#a89088] mt-0.5">
-                  {cocktails.length} bebidas encontradas
+                  {loading ? "Filtrando..." : `${cocktails.length} bebidas encontradas`}
+                  
                 </p>
               </div>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cocktails.map((cocktail) => (
                 <CocktailCard
@@ -79,7 +73,6 @@ export default function MatchPage() {
             </div>
           </div>
         )}
-
         {selected && (
           <CocktailModal
             cocktail={selected}
