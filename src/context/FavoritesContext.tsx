@@ -48,12 +48,20 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const toggleFavorite = useCallback(
     async (id: number) => {
-      if (favoriteIds.has(id)) {
-        await favoriteService.remove(id);
-        setFavoriteCocktails((prev) => prev.filter((c) => c.id !== id));
-      } else {
-        const cocktail = await favoriteService.add(id);
-        setFavoriteCocktails((prev) => [...prev, cocktail]);
+      if (!authService.isAuthenticated()) {
+        console.warn("toggleFavorite: usuario no autenticado");
+        return;
+      }
+      try {
+        if (favoriteIds.has(id)) {
+          await favoriteService.remove(id);
+          setFavoriteCocktails((prev) => prev.filter((c) => c.id !== id));
+        } else {
+          const cocktail = await favoriteService.add(id);
+          setFavoriteCocktails((prev) => [...prev, cocktail]);
+        }
+      } catch (err) {
+        console.error("toggleFavorite error:", err);
       }
     },
     [favoriteIds]

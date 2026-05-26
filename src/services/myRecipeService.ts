@@ -55,7 +55,11 @@ export const myRecipeService = {
         ingredients: form.ingredients,
       }),
     });
-    if (!res.ok) throw new Error("Error al crear la receta");
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error("POST /my-recipes/ error:", res.status, body);
+      throw new Error(`Error al crear la receta (${res.status})`);
+    }
     const data = await res.json();
     return mapRecipe(data);
   },

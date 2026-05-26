@@ -35,14 +35,24 @@ export function MyRecipesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addRecipe = useCallback(async (form: IMyRecipeForm): Promise<IMyRecipe> => {
-    const newRecipe = await myRecipeService.create(form);
-    setRecipes((prev) => [newRecipe, ...prev]);
-    return newRecipe;
+    try {
+      const newRecipe = await myRecipeService.create(form);
+      setRecipes((prev) => [newRecipe, ...prev]);
+      return newRecipe;
+    } catch (err) {
+      console.error("addRecipe error:", err);
+      throw err;
+    }
   }, []);
 
   const deleteRecipe = useCallback(async (id: number): Promise<void> => {
-    await myRecipeService.delete(id);
-    setRecipes((prev) => prev.filter((r) => r.id !== id));
+    try {
+      await myRecipeService.delete(id);
+      setRecipes((prev) => prev.filter((r) => r.id !== id));
+    } catch (err) {
+      console.error("deleteRecipe error:", err);
+      throw err;
+    }
   }, []);
 
   return (

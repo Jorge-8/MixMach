@@ -1,9 +1,9 @@
 "use client";
-// CAMBIO: se eliminó useState (ya no maneja favorito localmente)
-// Se agregó useFavorites del context global
+import { useRouter } from "next/navigation";
 import { ICocktail } from "@/types/ICocktail";
 import { ingredientMatches } from "@/utils/normalize";
 import { useFavorites } from "@/context/FavoritesContext";
+import { authService } from "@/services/authService";
 
 interface Props {
   cocktail: ICocktail;
@@ -44,11 +44,19 @@ export default function CocktailModal({
   // a POST /api/favorites/ o DELETE /api/favorites/{id}/
   // No hay que cambiar nada en este componente al conectar el back.
   // ─────────────────────────────────────────────────────────────
+  const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
   const fav = isFavorite(cocktail.id);
 
-  // MANTENER: nota de cierre fija para esta receta
   const closingNote = CLOSING_NOTES[cocktail.id % CLOSING_NOTES.length];
+
+  function handleFavorite() {
+    if (!authService.isAuthenticated()) {
+      router.push("/login");
+      return;
+    }
+    toggleFavorite(cocktail.id);
+  }
 
   return (
     <div
@@ -88,9 +96,9 @@ export default function CocktailModal({
             <i className="bi bi-x-lg text-sm font-bold">{""}</i>
           </button>
 
-          {/* Favorito — CAMBIO: usa context global en lugar de estado local */}
+          {/* Favorito */}
           <button
-            onClick={() => toggleFavorite(cocktail.id)}
+            onClick={handleFavorite}
             className={`absolute top-4 right-4 w-9 h-9 backdrop-blur-md border rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all duration-150 cursor-pointer
               ${
                 fav

@@ -41,7 +41,11 @@ export const favoriteService = {
       headers: authHeaders(),
       body: JSON.stringify({ cocktail_id: cocktailId }),
     });
-    if (!res.ok) throw new Error("Error al agregar favorito");
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error("POST /favorites/ error:", res.status, body);
+      throw new Error(`Error al agregar favorito (${res.status})`);
+    }
     const data = await res.json();
     return mapFavoriteCocktail(data);
   },
