@@ -106,6 +106,14 @@ export const authService = {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('isLoggedIn');
+    },
+
+    handleUnauthorized() {
+        this.logout();
+        if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+        }
     },
 
     getAccessToken(): string | null {

@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/constants";
 import { ICocktail } from "@/types/ICocktail";
+import { authService } from "@/services/authService";
 
 function authHeaders() {
   const token = localStorage.getItem("accessToken");
@@ -30,6 +31,7 @@ export const favoriteService = {
     const res = await fetch(`${API_BASE_URL}/favorites/`, {
       headers: authHeaders(),
     });
+    if (res.status === 401) { authService.handleUnauthorized(); return []; }
     if (!res.ok) throw new Error("Error al obtener favoritos");
     const data = await res.json();
     return data.map(mapFavoriteCocktail);
@@ -41,6 +43,7 @@ export const favoriteService = {
       headers: authHeaders(),
       body: JSON.stringify({ cocktail_id: cocktailId }),
     });
+    if (res.status === 401) { authService.handleUnauthorized(); throw new Error("Sesión expirada"); }
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       console.error("POST /favorites/ error:", res.status, body);
@@ -55,6 +58,7 @@ export const favoriteService = {
       method: "DELETE",
       headers: authHeaders(),
     });
+    if (res.status === 401) { authService.handleUnauthorized(); return; }
     if (!res.ok) throw new Error("Error al eliminar favorito");
   },
 };

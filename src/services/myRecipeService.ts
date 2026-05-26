@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/constants";
 import { IMyRecipe, IMyRecipeForm } from "@/types/IMyRecipe";
+import { authService } from "@/services/authService";
 
 function authHeaders() {
   const token = localStorage.getItem("accessToken");
@@ -35,6 +36,7 @@ export const myRecipeService = {
     const res = await fetch(`${API_BASE_URL}/my-recipes/`, {
       headers: authHeaders(),
     });
+    if (res.status === 401) { authService.handleUnauthorized(); return []; }
     if (!res.ok) throw new Error("Error al obtener las recetas");
     const data = await res.json();
     return data.map(mapRecipe);
@@ -55,6 +57,7 @@ export const myRecipeService = {
         ingredients: form.ingredients,
       }),
     });
+    if (res.status === 401) { authService.handleUnauthorized(); throw new Error("Sesión expirada"); }
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       console.error("POST /my-recipes/ error:", res.status, body);
@@ -69,6 +72,7 @@ export const myRecipeService = {
       method: "DELETE",
       headers: authHeaders(),
     });
+    if (res.status === 401) { authService.handleUnauthorized(); return; }
     if (!res.ok) throw new Error("Error al eliminar la receta");
   },
 };
