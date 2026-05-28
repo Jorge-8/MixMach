@@ -121,15 +121,38 @@ export default function MyRecipeModal({ recipe, onClose, onDelete }: Props) {
                     key={i}
                     className="flex items-center justify-between text-xs py-1 border-b border-[#EDD9C8]/50 dark:border-[#3a3a5c]/50 last:border-0"
                   >
-                    <span className="flex items-center gap-1.5 font-medium text-[#2C1810] dark:text-[#FFF8F0]">
+                    
+                    {/* <span className="flex items-center gap-1.5 font-medium text-[#2C1810] dark:text-[#FFF8F0]">
                       <i className="bi bi-check-circle-fill text-green-500 text-xs flex-shrink-0">
                         {""}
                       </i>
                       {ing.name}
                     </span>
+
+
                     <span className="text-[#9B7A6A] dark:text-[#a89088] ml-2 flex-shrink-0">
                       {ing.amount}
+                    </span> */}
+
+                    <span className="flex items-center gap-1.5 font-medium text-[#2C1810] dark:text-[#FFF8F0]">
+                      <i className="bi bi-check-circle-fill text-green-500 text-xs flex-shrink-0">{""}</i>
+                      {ing.name}
                     </span>
+
+                    <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+                      <span className="text-[#9B7A6A] dark:text-[#a89088]">{ing.amount}</span>
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(ing.name)}&tbm=shop`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Comprar ${ing.name}`}
+                        className="w-5 h-5 flex items-center justify-center rounded-full bg-[#4ECDC4]/10 text-[#4ECDC4] hover:bg-[#4ECDC4] hover:text-white transition-all duration-150"
+                      >
+                        <i className="bi bi-cart3 text-[10px]">{""}</i>
+                      </a>
+                    </div>
+
+
                   </div>
                 ))}
               </div>
