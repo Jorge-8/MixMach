@@ -69,17 +69,30 @@ export default function RecipeFormModal({ onClose, onSave }: Props) {
   ]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Imagen ──
   // TODO BACKEND: al conectar el back, enviar el File directamente con FormData
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () =>
-      setForm((prev) => ({ ...prev, image: reader.result as string }));
-    reader.readAsDataURL(file);
+  // function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   const reader = new FileReader();
+  //   reader.onload = () =>
+  //     setForm((prev) => ({ ...prev, image: reader.result as string }));
+  //   reader.readAsDataURL(file);
+  // }
+
+  // 1. Agrega este handler para drag & drop de URLs:
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const url = e.dataTransfer.getData("text/uri-list") 
+            || e.dataTransfer.getData("text/plain");
+    if (url && url.startsWith("http")) {
+      setForm((prev) => ({ ...prev, image: url }));
+    }
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault(); // necesario para que onDrop funcione
   }
 
   // ── Ingredientes ──
@@ -263,7 +276,8 @@ export default function RecipeFormModal({ onClose, onSave }: Props) {
                 Imagen del cóctel
               </label>
               {/* TODO BACKEND: la imagen se enviará como File en FormData */}
-              {form.image ? (
+
+              {/* {form.image ? (
                 <div className="relative h-36 rounded-xl overflow-hidden">
                   <img
                     src={form.image}
@@ -291,14 +305,53 @@ export default function RecipeFormModal({ onClose, onSave }: Props) {
                     </span>
                   </p>
                 </button>
+              )} */}
+
+              {form.image ? (
+                <div className="relative h-36 rounded-xl overflow-hidden">
+                  <img src={form.image} alt="preview" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => setForm((p) => ({ ...p, image: null }))}
+                    className="absolute top-2 right-2 w-7 h-7 bg-black/60 backdrop-blur-sm border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-[#FF6B6B] transition-colors"
+                  >
+                    <i className="bi bi-x text-sm">{""}</i>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    className="w-full h-28 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[#EDD9C8] dark:border-[#3a3a5c] rounded-xl text-[#9B7A6A] hover:border-[#4ECDC4] hover:text-[#4ECDC4] transition-colors"
+                  >
+                    <i className="bi bi-link-45deg text-2xl">{""}</i>
+                    <p className="text-xs text-center">
+                      Arrastra una imagen desde el navegador
+                      <br />
+                      <span className="text-[10px]">o pega la URL abajo</span>
+                    </p>
+                  </div>
+
+                  <input
+                    type="url"
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val.startsWith("http")) setForm((p) => ({ ...p, image: val }));
+                    }}
+                    className="w-full bg-white dark:bg-[#0f0f23] border border-[#EDD9C8] dark:border-[#3a3a5c] rounded-xl px-4 py-2 text-xs text-[#2C1810] dark:text-[#FFF8F0] placeholder-[#9B7A6A] outline-none focus:border-[#4ECDC4] transition-colors"
+                  />
+                </div>
               )}
-              <input
+
+
+              {/* <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 className="hidden"
                 onChange={handleImageChange}
-              />
+              /> */}
             </div>
 
             {/* Descripción */}

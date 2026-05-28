@@ -41,7 +41,8 @@ export const authService = {
 
         const result = await response.json();
 
-        document.cookie = `access_token=${result.access}; path=/; SameSite=Lax`;
+        const expires = new Date(Date.now() + 1000 * 60 * 55).toUTCString(); // 55 min
+        document.cookie = `access_token=${result.access}; path=/; SameSite=Lax; expires=${expires}`;
 
         localStorage.setItem('accessToken', result.access);
         localStorage.setItem('refreshToken', result.refresh);
