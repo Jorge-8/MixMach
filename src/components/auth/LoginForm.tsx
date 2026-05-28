@@ -62,9 +62,7 @@ export default function LoginForm() {
           password: form.password,
         });
 
-        setShowSuccessModal(true);
-        // Redirige inmediatamente al perfil
-        //router.push("/profile");
+        router.push("/profile");
 
       } catch (error: any) {
         setApiError(error.message);

@@ -128,6 +128,7 @@ export const authService = {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         localStorage.removeItem('isLoggedIn');
+        window.dispatchEvent(new Event('auth-change'));
     },
 
     async handleUnauthorized() {

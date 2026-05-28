@@ -179,7 +179,7 @@ class IngredientListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
 class PlatformCocktailListView(generics.ListAPIView):
-    queryset = Cocktail.objects.filter(user__isnull=True).order_by('-created_at')
+    queryset = Cocktail.objects.all().order_by('-created_at')
     serializer_class = CocktailSerializer
     permission_classes = [permissions.AllowAny]
 

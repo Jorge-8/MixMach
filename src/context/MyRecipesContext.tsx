@@ -26,7 +26,10 @@ export function MyRecipesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     function loadRecipes() {
-      if (!authService.isAuthenticated()) return;
+      if (!authService.isAuthenticated()) {
+        setRecipes([]);
+        return;
+      }
       setLoading(true);
       myRecipeService
         .getAll()

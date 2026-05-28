@@ -28,7 +28,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     function loadFavorites() {
-      if (!authService.isAuthenticated()) return;
+      if (!authService.isAuthenticated()) {
+        setFavoriteCocktails([]);
+        return;
+      }
       setLoading(true);
       favoriteService
         .getAll()
