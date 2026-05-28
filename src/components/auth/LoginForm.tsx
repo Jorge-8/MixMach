@@ -37,8 +37,9 @@ export default function LoginForm() {
     const newErrors = { email: "", password: "" };
     let valid = true;
 
-    if (!form.email.includes("@") || !form.email.includes(".com")) {
-      newErrors.email = "Ingresa un correo válido (debe tener @ y .com)";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      newErrors.email = "Ingresa un correo válido";
       valid = false;
     }
     if (!form.password) {
