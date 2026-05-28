@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Ingredient, Cocktail, CocktailIngredient, BeverageCategory, Favorite
+from .models import Ingredient, Cocktail, CocktailIngredient, BeverageCategory, Favorite, SearchHistory
 
 # Validacion de correos
 from django.core.validators import EmailValidator
@@ -104,3 +104,11 @@ class UserCocktailSerializer(serializers.Serializer):
     steps = serializers.JSONField(default=list)
     tip = serializers.CharField(allow_blank=True, required=False, default='')
     ingredients = serializers.JSONField(default=list)  # [{name, amount}]
+
+# Historial de busqueda
+
+class SearchHistorySerializer(serializers.ModelSerializer):
+    cocktail_name = serializers.CharField(source='cocktail.name', read_only=True, allow_null=True)
+    class Meta:
+        model = SearchHistory
+        fields = ['id', 'search_text', 'cocktail', 'cocktail_name', 'created_at']

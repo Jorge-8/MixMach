@@ -4,8 +4,6 @@ import { IMyRecipeForm, EMPTY_RECIPE_FORM } from "@/types/IMyRecipe";
 
 interface Props {
   onClose: () => void;
-  // TODO BACKEND: onSave llamará a POST /api/my-recipes/ con el body del formulario
-  // y recibirá el IMyRecipe creado (con id y createdAt del servidor)
   onSave: (form: IMyRecipeForm) => Promise<void>;
 }
 
@@ -344,14 +342,6 @@ export default function RecipeFormModal({ onClose, onSave }: Props) {
                 </div>
               )}
 
-
-              {/* <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              /> */}
             </div>
 
             {/* Descripción */}

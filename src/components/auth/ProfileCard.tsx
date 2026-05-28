@@ -9,6 +9,7 @@ import { authService } from "@/services/authService";
 import CocktailModal from "@/components/match/CocktailModal";
 import MyRecipeModal from "@/components/my-recipes/MyRecipeModal";
 import RecipeFormModal from "@/components/my-recipes/RecipeFormModal";
+import { searchHistoryService, IHistoryItem } from "@/services/searchHistoryService";
 
 
 function difficultyColor(d: string) {
@@ -162,13 +163,19 @@ export default function ProfileCard() {
   const [showRecipeForm, setShowRecipeForm] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Historial sjdsh
+
+  const [history, setHistory] = useState<IHistoryItem[]>([]);
+
   useEffect(() => {
-    setTimeout(() => setMounted(true), 0);
     const stored = authService.getUser();
     if (stored) setUser(stored);
-  }, []);
+    setTimeout(() => setMounted(true), 0);
 
-  const [history, setHistory] = useState<{ id: number; query: string; type: string; daysAgo: number }[]>([]);
+    if (authService.isAuthenticated()) {
+      searchHistoryService.getAll().then(setHistory).catch(console.error);
+    }
+  }, []);
 
   const userInitials = user ? getInitials(user.name || user.email) : "?";
 
@@ -188,7 +195,9 @@ export default function ProfileCard() {
     router.push("/login");
   }
 
-  function handleClearHistory() {
+  // handleClearHistory:
+  async function handleClearHistory() {
+    await searchHistoryService.clear();
     setHistory([]);
   }
 
@@ -327,43 +336,41 @@ export default function ProfileCard() {
                   </p>
                 </div>
               ) : (
+                
                 history.map((item) => {
-                  const style = historyStyle(item.type);
+                  const query = item.search_text || item.cocktail_name || "";
+                  const type = item.cocktail ? "coctel" : "ingrediente";
+                  const daysAgo = Math.floor(
+                    (Date.now() - new Date(item.created_at).getTime()) / 86400000
+                  );
+                  const style = historyStyle(type);
                   return (
                     <button
                       key={item.id}
-                      onClick={() =>
-                        router.push(`/?q=${encodeURIComponent(item.query)}`)
-                      }
-                      className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white dark:bg-[#16213e] border border-[#EDD9C8] dark:border-[#3a3a5c] rounded-2xl hover:border-[#4ECDC4] hover:shadow-sm transition-all duration-200 cursor-pointer group text-left"
+                      onClick={() => router.push(`/?q=${encodeURIComponent(query)}`)}
+                      className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white dark:bg-[#16213e] border border-[#EDD9C8] dark:border-[#3a3a5c] rounded-2xl hover:border-[#4ECDC4] hover:shadow-sm transition-all duration-200 cursor-pointer group text-left w-full"
                     >
-                      <div
-                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${style.bg} flex items-center justify-center flex-shrink-0`}
-                      >
-                        <i className={`bi ${style.icon} ${style.text} text-sm`}>
-                          {""}
-                        </i>
+                      <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl ${style.bg} flex items-center justify-center flex-shrink-0`}>
+                        <i className={`bi ${style.icon} ${style.text} text-sm`}>{""}</i>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs sm:text-sm font-medium text-[#2C1810] dark:text-[#FFF8F0] truncate group-hover:text-[#4ECDC4] transition-colors">
-                          {item.query}
+                          {query}
                         </p>
                         <p className={`text-[10px] font-medium ${style.text}`}>
                           {style.label}
                         </p>
                       </div>
-                      {/* Fecha solo en cliente para evitar hydration mismatch */}
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                         <span className="text-[10px] text-[#9B7A6A] dark:text-[#a89088] bg-[#FFF3EA] dark:bg-[#0f0f23] px-2 py-0.5 rounded-full">
-                          {mounted ? formatDate(item.daysAgo) : ""}
+                          {mounted ? formatDate(daysAgo) : ""}
                         </span>
-                        <i className="bi bi-arrow-up-left text-[#9B7A6A] text-xs group-hover:text-[#4ECDC4] transition-colors">
-                          {""}
-                        </i>
+                        <i className="bi bi-arrow-up-left text-[#9B7A6A] text-xs group-hover:text-[#4ECDC4] transition-colors">{""}</i>
                       </div>
                     </button>
                   );
                 })
+
               )}
             </div>
           </section>
@@ -397,8 +404,8 @@ export default function ProfileCard() {
       {showRecipeForm && (
         <RecipeFormModal
           onClose={() => setShowRecipeForm(false)}
-          onSave={(form) => {
-            handleSaveRecipe(form);
+          onSave={async (form) => {
+            await handleSaveRecipe(form);
             router.push("/my-recipes");
           }}
         />

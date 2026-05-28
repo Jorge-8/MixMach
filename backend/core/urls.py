@@ -5,6 +5,7 @@ from .views import (
     IngredientListView, PlatformCocktailListView, BeverageCategoryListView,
     FavoriteListView, FavoriteDetailView,
     MyRecipeListView, MyRecipeDetailView,
+    SearchHistoryView,
 )
 
 urlpatterns = [
@@ -20,4 +21,5 @@ urlpatterns = [
     path('favorites/<int:cocktail_id>/', FavoriteDetailView.as_view(), name='favorites-detail'),
     path('my-recipes/', MyRecipeListView.as_view(), name='my-recipes-list'),
     path('my-recipes/<int:pk>/', MyRecipeDetailView.as_view(), name='my-recipes-detail'),
+    path('search-history/', SearchHistoryView.as_view(), name='search-history'),
 ]

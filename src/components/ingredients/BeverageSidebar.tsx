@@ -2,6 +2,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { normalizeText } from "@/utils/normalize";
 import { API_BASE_URL } from "@/constants";
+import { searchHistoryService } from "@/services/searchHistoryService";
+import { authService } from "@/services/authService";
 
 // ═══════════════════════════════════════════════════════════════
 // Metadata visual — emojis, colores y orden. Los items vienen del back.
@@ -200,7 +202,13 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
   const nothingFound = isSearching && matchingCats.length === 0 && optionalMatches.length === 0;
 
   function toggleItem(item: string) {
-    setSelected((prev) => prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]);
+    const isRemoving = selected.includes(item);
+    setSelected((prev) => {
+      if (!isRemoving && authService.isAuthenticated()) {
+        searchHistoryService.add({ search_text: item }).catch(console.error);
+      }
+      return isRemoving ? prev.filter((i) => i !== item) : [...prev, item];
+    });
   }
   function toggleCollapse(id: string) {
     setCollapsed((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);

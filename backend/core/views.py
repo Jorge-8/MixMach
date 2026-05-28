@@ -8,9 +8,13 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, authenticate
 from django.core.cache import cache
 
-from .models import Ingredient, Cocktail, BeverageCategory, Favorite, CocktailIngredient
-from .serializers import RegisterSerializer, IngredientSerializer, CocktailSerializer, BeverageCategorySerializer, FavoriteSerializer, UserCocktailSerializer
+from .models import Ingredient, Cocktail, BeverageCategory, Favorite, CocktailIngredient, SearchHistory
+from .serializers import RegisterSerializer, IngredientSerializer, CocktailSerializer, BeverageCategorySerializer, FavoriteSerializer, UserCocktailSerializer, SearchHistorySerializer
+
 from .utils import send_verification_email
+
+from django.utils import timezone
+from datetime import timedelta
 
 import random
 import string
@@ -268,4 +272,34 @@ class MyRecipeDetailView(APIView):
         except Cocktail.DoesNotExist:
             return Response({"error": "Receta no encontrada"}, status=status.HTTP_404_NOT_FOUND)
         recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+# Historial
+
+class SearchHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        history = SearchHistory.objects.filter(user=request.user).order_by('-created_at')[:20]
+        return Response(SearchHistorySerializer(history, many=True).data)
+
+    def post(self, request):
+        # Deduplicar: ignorar si ya existe la misma búsqueda en los últimos 5 segundos
+        recent = SearchHistory.objects.filter(
+            user=request.user,
+            search_text=request.data.get('search_text'),
+            created_at__gte=timezone.now() - timedelta(seconds=5)
+        ).exists()
+        
+        if recent:
+            return Response(status=status.HTTP_200_OK)  # silenciar duplicado
+        
+        serializer = SearchHistorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        SearchHistory.objects.filter(user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
