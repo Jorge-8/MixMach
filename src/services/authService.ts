@@ -103,6 +103,25 @@ export const authService = {
         return await response.json();
     },
 
+    async refreshToken(): Promise<boolean> {
+        const refresh = localStorage.getItem('refreshToken');
+        if (!refresh) return false;
+
+        const res = await fetch(`${API_BASE_URL}/token/refresh/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh }),
+        });
+
+        if (!res.ok) return false;
+
+        const data = await res.json();
+        localStorage.setItem('accessToken', data.access);
+        const expires = new Date(Date.now() + 1000 * 60 * 55).toUTCString();
+        document.cookie = `access_token=${data.access}; path=/; SameSite=Lax; expires=${expires}`;
+        return true;
+    },
+
     logout() {
         document.cookie = 'access_token=; path=/; max-age=0';
         localStorage.removeItem('accessToken');
@@ -111,7 +130,14 @@ export const authService = {
         localStorage.removeItem('isLoggedIn');
     },
 
-    handleUnauthorized() {
+    async handleUnauthorized() {
+        const refreshed = await this.refreshToken();
+        if (refreshed) {
+            // Token renovado, reintentar recargando la página
+            window.location.reload();
+            return;
+        }
+        // Si no se pudo renovar, logout
         this.logout();
         if (typeof window !== 'undefined') {
             window.location.href = '/login';

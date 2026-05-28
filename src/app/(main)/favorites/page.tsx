@@ -4,8 +4,12 @@ import { ICocktail } from "@/types/ICocktail";
 import { useFavorites } from "@/context/FavoritesContext";
 import FavoriteCard from "@/components/favorites/FavoriteCard";
 import CocktailModal from "@/components/match/CocktailModal";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 export default function FavoritesPage() {
+
+  const { isAuthenticated, mounted } = useRequireAuth();
+  
   const { favoriteCocktails } = useFavorites();
 
   const [selected, setSelected] = useState<ICocktail | null>(null);
@@ -21,6 +25,8 @@ export default function FavoritesPage() {
         c.ingredients.some((i) => i.name.toLowerCase().includes(q))
     );
   }, [favoriteCocktails, search]);
+
+  if (!mounted || !isAuthenticated) return null;
 
   const noFavorites = favoriteCocktails.length === 0;
 

@@ -5,6 +5,7 @@ import { useMyRecipes } from "@/context/MyRecipesContext";
 import MyRecipeCard from "@/components/my-recipes/MyRecipeCard";
 import MyRecipeModal from "@/components/my-recipes/MyRecipeModal";
 import RecipeFormModal from "@/components/my-recipes/RecipeFormModal";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 // ═══════════════════════════════════════════════════════════════
 // TODO BACKEND: cuando se conecte al back, useMyRecipes usará
@@ -13,6 +14,9 @@ import RecipeFormModal from "@/components/my-recipes/RecipeFormModal";
 
 export default function MyRecipesPage() {
   // MANTENER: viene del contexto compartido con ProfileCard
+  const { isAuthenticated, mounted } = useRequireAuth();
+  
+
   const { recipes, addRecipe, deleteRecipe } = useMyRecipes();
 
   const [selectedRecipe, setSelectedRecipe] = useState<
@@ -31,6 +35,8 @@ export default function MyRecipesPage() {
         r.ingredients.some((i) => i.name.toLowerCase().includes(q))
     );
   }, [recipes, search]);
+
+  if (!mounted || !isAuthenticated) return null;
 
   async function handleSave(form: IMyRecipeForm) {
     await addRecipe(form);
