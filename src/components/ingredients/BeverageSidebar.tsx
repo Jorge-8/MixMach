@@ -102,11 +102,12 @@ export interface BeverageFilters {
 interface Props {
   onChange?: (selected: string[]) => void;
   onFiltersChange?: (filters: BeverageFilters) => void;
+  onSearchChange?: (query: string) => void;
 }
 
 type Category = { id: string; emoji: string; name: string; color: any; items: string[] };
 
-export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
+export default function BeverageSidebar({ onChange, onFiltersChange, onSearchChange }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -124,6 +125,7 @@ export default function BeverageSidebar({ onChange, onFiltersChange }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => { onChange?.(selected); }, [selected]); // eslint-disable-line
+  useEffect(() => { onSearchChange?.(search); }, [search]); // eslint-disable-line
   
   useEffect(() => {
     onFiltersChange?.({

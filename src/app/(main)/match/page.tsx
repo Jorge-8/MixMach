@@ -9,6 +9,7 @@ import { useMatchCocktails } from "@/hooks/useMatchCocktails";
 export default function MatchPage() {
 
   const [selectedBeverages, setSelectedBeverages] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [filters, setFilters] = useState<BeverageFilters>({
     difficulty: null,
@@ -21,7 +22,7 @@ export default function MatchPage() {
   const handleBeverageChange = useCallback((s: string[]) => setSelectedBeverages(s), []);
   const handleFiltersChange = useCallback((f: BeverageFilters) => setFilters(f), []);
 
-  const { cocktails, loading, error } = useMatchCocktails(selectedBeverages, filters);
+  const { cocktails, loading, error } = useMatchCocktails(selectedBeverages, filters, searchQuery);
 
   if (error) return (
     <div className="flex-1 flex items-center justify-center">
@@ -36,6 +37,7 @@ export default function MatchPage() {
       <BeverageSidebar
         onChange={handleBeverageChange}
         onFiltersChange={handleFiltersChange}
+        onSearchChange={setSearchQuery}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

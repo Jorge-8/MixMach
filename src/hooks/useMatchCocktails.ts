@@ -4,7 +4,7 @@ import { normalizeText } from "@/utils/normalize";
 import { useState, useEffect } from "react";
 import { BeverageFilters } from "@/components/ingredients/BeverageSidebar";
 
-export function useMatchCocktails(selectedBeverages: string[], filters: BeverageFilters) {
+export function useMatchCocktails(selectedBeverages: string[], filters: BeverageFilters, searchQuery = "") {
   const [cocktails, setCocktails] = useState<ICocktail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +14,7 @@ export function useMatchCocktails(selectedBeverages: string[], filters: Beverage
     filters.difficulty ?? "",
     filters.is_alcoholic ?? "",
     filters.maxIngr ?? "",
+    searchQuery,
   ].join("|");
 
   useEffect(() => {
@@ -32,13 +33,21 @@ export function useMatchCocktails(selectedBeverages: string[], filters: Beverage
         if (filters.is_alcoholic === "sin-alcohol") data = data.filter((c) => c.isAlcoholic === false);
         if (filters.maxIngr) data = data.filter((c) => c.ingredients.length <= filters.maxIngr!);
 
-        if (selectedBeverages.length === 0) {
-          setCocktails(data);
-        } else {
-          setCocktails(data.filter((c) =>
+        if (selectedBeverages.length > 0) {
+          data = data.filter((c) =>
             selectedBeverages.some((s) => normalizeText(c.name).includes(normalizeText(s)))
-          ));
+          );
         }
+
+        if (searchQuery.trim()) {
+          const q = normalizeText(searchQuery.trim());
+          data = data.filter((c) =>
+            normalizeText(c.name).includes(q) ||
+            c.ingredients.some((ing) => normalizeText(ing.name).includes(q))
+          );
+        }
+
+        setCocktails(data);
       } catch (err: any) {
         if (mounted) setError(err.message || "Error cargando cócteles");
       } finally {
